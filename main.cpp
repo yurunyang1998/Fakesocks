@@ -44,7 +44,7 @@ string resolveURL(char * buf, int len)
 int main() {
 
     resolveDNS * dns = new resolveDNS();
-    dns->url2Ip("www.baidu.com","53");
+    dns->url2Ip("google.com","53");
 
 //
 //
@@ -268,7 +268,7 @@ int main() {
 //    setHead(buf);
 //    setQuery(name,buf,len);
 //    len += 16;
-    //    int len_recvMsg = sendDNSPacket(buf,len,recvMsg);
+//    int len_recvMsg = sendDNSPacket(buf,len,recvMsg);
 //    printf("接收的报文长度为 %d 字节\n",len_recvMsg);
 //    printf("下面是接收报文的16进制表示：\n");
 //    int i;

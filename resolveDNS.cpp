@@ -3,74 +3,116 @@
 //
 #include <arpa/inet.h>
 #include "resolveDNS.h"
+#include "string"
 using namespace std;
 typedef struct sockaddr SA;
 
-int sendDNSPacket(unsigned char *buf, int len, char *recvMsg)
+void resolveDNS::setHead(unsigned char *buf)
+{
+    buf[0] = 0x00;
+    buf[1] = 0;
+    buf[2] = 0x01;
+    buf[3] = 0;
+    buf[4] = 0;
+    buf[5] = 1;
+    buf[6] = 0;
+    buf[7] = 0;
+    buf[8] = buf[9] = buf[10] = buf[11] = 0;
+}
+
+void resolveDNS::setQuery(char *name, unsigned char *buf, int len)
+{
+
+//    printf("%s",name);
+    strcat((char*)buf+12,name);
+//    printf("%x",buf[len]);
+    fflush(stdout);
+    int pos = len + 12;
+    buf[pos] = 0;
+    buf[pos+1] = 1;
+    buf[pos+2] = 0;
+    buf[pos+3] = 1;
+}
+int resolveDNS::changeDN(char *DN, unsigned char *name)
+{
+    int i = strlen(DN) - 1;
+    int j = i + 1;
+    int k;
+    name[j+1] = 0;
+    for(k = 0; i >= 0; i--,j--) {
+        if(DN[i] == '.') {
+            name[j] = k;
+            k = 0;
+        }
+        else {
+            name[j] = DN[i];
+            k++;
+        }
+    }
+    name[0] = k;
+    return (strlen(DN) + 2);
+}
+
+
+string resolveDNS::resolve(unsigned char *recvMsg, int len, int len_recvMsg)
+{
+    int pos = len;
+    int cnt = 12;
+    while(pos < len_recvMsg) {
+        unsigned char now_pos = recvMsg[pos+1];
+        unsigned char retype = recvMsg[pos+3];
+        unsigned char reclass = recvMsg[pos+5];
+        unsigned char offset = recvMsg[pos+11];
+        if(retype == 1) {
+            if(now_pos == cnt && reclass == 1) {
+//                printf("%u.%u.%u.%u\n",recvMsg[pos+12],recvMsg[pos+13],recvMsg[pos+14],recvMsg[pos+15]);
+                string ip = std::to_string(recvMsg[pos+12])+'.'+std::to_string(recvMsg[pos+13])+'.'+std::to_string(recvMsg[pos+13])
+                +'.'+std::to_string(recvMsg[pos+14]);
+                return ip;
+            }
+        }
+        else if(retype == 5) {
+            cnt = pos + 12 ;
+        }
+        pos = pos + 12 + offset;
+    }
+}
+
+
+
+int resolveDNS::sendDNSPacket(unsigned char *buf, int len, char *recvMsg)
 {
     int s;
     struct sockaddr_in sin;
 
     memset(&sin,0,sizeof(sin));
-    sin.sin_addr.s_addr = inet_addr("114.114.114.114");
-    sin.sin_family = AF_INET;
-    sin.sin_port = htons(53);
+//    sin.sin_addr.s_addr = inet_addr("114.114.114.114");
+//    sin.sin_family = AF_INET;
+//    sin.sin_port = htons(53);
+//
+//    s = socket(PF_INET,SOCK_DGRAM,0);
+//    sendto(s,buf,len,0,(struct sockaddr *)&sin,sizeof(sin));
+    sendto(udpsockfd,buf,len,0,(struct sockaddr *)&dnsServe,sizeof(dnsServe));
 
-    s = socket(PF_INET,SOCK_DGRAM,0);
-    sendto(s,buf,len,0,(struct sockaddr *)&sin,sizeof(sin));
-    return recv(s,recvMsg,1024,0);
-
+    int i = recv(udpsockfd,recvMsg,1024,0);
+    return i;
 }
 
 
 int resolveDNS::url2Ip(string dstUrl, string port) {
 
+    unsigned char  buf[1024];
+    char  *dsurl=(char* ) dstUrl.c_str();
+    char name[1024];
+    setHead(buf);
+    int len = changeDN(dsurl, (unsigned char *) name);
+    setQuery(name , buf,len);
+    char recvMsg[1024];
+    len+=16;
+    int recvlen=sendDNSPacket((unsigned char *) buf,len,recvMsg);
 
-    DNSreq_t req;
-    req.header.TransactionId=1;
-    req.header.Flags=0x0001;
-    req.header.Questions=0x0100;
-    req.header.AnswerRRs=0x0000;
-    req.header.AuthorityRRs=0x0000;
-    req.header.AdditionalRRs=0x0000;
-//    req.question.Name='0moc3udiab5www3';
-
-    int len = dstUrl.length();
-    req.question.Name[len+1] = 0;
-    int k=0;
-
-    for(int i=dstUrl.length()-1;i>=0;i--)
-    {
-        if(dstUrl[i] == '.')
-        {
-            req.question.Name[i+1] = k;
-            k=0;
-        } else
-        {
-            req.question.Name[i+1] = dstUrl[i];
-            k++;
-        }
-    }
-    req.question.Name[0]=k;
-    req.question.Name[len+2]=0;
-    req.question.Name[len+3]=1;
-    req.question.Name[len+4]=0;
-    req.question.Name[len+5]=1;
-
-    char  snd_buf[40];
-    memset(snd_buf,0,1024);
-    memcpy(snd_buf, &req, sizeof(req));
-
-
-    sendto(udpsockfd, &snd_buf, sizeof(snd_buf), 0, (SA*) &dnsServe, sizeof(SA));
-    char  buf[1024];
-
-    sendDNSPacket((unsigned char *) snd_buf,sizeof(snd_buf),buf);
-
-//    socklen_t lens = sizeof(dnsServe);
-//    char * area;
-//    int lenss= recv(udpsockfd, buf, 1024, 0);
-    printf("%s",buf);
+    string ip = resolve((unsigned char *)recvMsg, len,recvlen);
+    cout<<ip;
     fflush(stdout);
 }
 
