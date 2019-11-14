@@ -116,7 +116,7 @@ string  resolveDNS::url2Ip(string dstUrl) {
 }
 
 resolveDNS::resolveDNS() {
-    udpsockfd = createSocket(AF_INET, SOCK_DGRAM, 0);
+    udpsockfd = common::createSocket(AF_INET, SOCK_DGRAM, 0);
     dnsServe.sin_family=AF_INET;
     dnsServe.sin_addr.s_addr=inet_addr("114.114.114.114");
     dnsServe.sin_port = htons(53);
