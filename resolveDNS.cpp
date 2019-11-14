@@ -99,7 +99,7 @@ int resolveDNS::sendDNSPacket(unsigned char *buf, int len, char *recvMsg)
 }
 
 
-int resolveDNS::url2Ip(string dstUrl, string port) {
+string  resolveDNS::url2Ip(string dstUrl) {
 
     unsigned char  buf[1024];
     char  *dsurl=(char* ) dstUrl.c_str();
@@ -112,8 +112,7 @@ int resolveDNS::url2Ip(string dstUrl, string port) {
     int recvlen=sendDNSPacket((unsigned char *) buf,len,recvMsg);
 
     string ip = resolve((unsigned char *)recvMsg, len,recvlen);
-    cout<<ip;
-    fflush(stdout);
+    return  ip;
 }
 
 resolveDNS::resolveDNS() {

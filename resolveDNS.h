@@ -81,7 +81,7 @@ private:
 
 public:
         resolveDNS();
-        int url2Ip(std::string dstUrl, std::string port);
+        std::string  url2Ip(std::string dstUrl);
 
     };
 

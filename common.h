@@ -11,9 +11,14 @@
 #include <cstring>
 #include <arpa/inet.h>
 
-int createSocket(int family, int type, int protocol);
+namespace  common{
 
-struct sockaddr_in  * creatServeraddr(char* ip, int port);
+
+    int createSocket(int family, int type, int protocol);
+
+    struct sockaddr_in  * creatServeraddr(char* ip, int port);
+
+}
 
 
 #endif //FAKESOCKS_COMMON_H
