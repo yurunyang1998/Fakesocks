@@ -8,13 +8,13 @@
 struct sockaddr_in  * common::creatServeraddr(char* ip, int port)
     {
 
-        std::cout << "inet_addr: " << (ip) << std::endl;
+//        std::cout << "inet_addr: " << (ip) << std::endl;
         struct sockaddr_in  * sockaddrIn = new struct sockaddr_in;
         bzero(sockaddrIn, sizeof(struct sockaddr));
         sockaddrIn->sin_family= AF_INET;
         sockaddrIn->sin_addr.s_addr= inet_addr(ip);
         sockaddrIn->sin_port = htons(port);
-        std::cout << "after" << (ip) << std::endl;
+//        std::cout << "after" << (ip) << std::endl;
 
         return  sockaddrIn;
     }
@@ -27,6 +27,6 @@ int common::createSocket(int family, int type, int protocol) {
         {
             std::cout<<strerror(errno);
         }
-        std::cout<<"fd: "<<n<<std::endl;
+//        std::cout<<"fd: "<<n<<std::endl;
         return (n);
 }

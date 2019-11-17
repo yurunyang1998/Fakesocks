@@ -65,9 +65,11 @@ string resolveDNS::resolve(unsigned char *recvMsg, int len, int len_recvMsg)
         unsigned char offset = recvMsg[pos+11];
         if(retype == 1) {
             if(now_pos == cnt && reclass == 1) {
-//                printf("%u.%u.%u.%u\n",recvMsg[pos+12],recvMsg[pos+13],recvMsg[pos+14],recvMsg[pos+15]);
-                string ip = std::to_string(recvMsg[pos+12])+'.'+std::to_string(recvMsg[pos+13])+'.'+std::to_string(recvMsg[pos+13])
-                +'.'+std::to_string(recvMsg[pos+14]);
+//                printf("%u.%u.%u.%u\n",recvMsg[pos+12],recvMsg[pos+13],recvMsg[pos+14],recvMsg[pos+15]);]
+//                string ip="";
+                string ip = std::to_string(recvMsg[pos+12])+'.'+std::to_string(recvMsg[pos+13])+'.'+std::to_string(recvMsg[pos+14])
+                +'.'+std::to_string(recvMsg[pos+15]);
+//                cout<<ip<<endl;
                 return ip;
             }
         }
@@ -111,13 +113,15 @@ string  resolveDNS::url2Ip(string dstUrl) {
     len+=16;
     int recvlen=sendDNSPacket((unsigned char *) buf,len,recvMsg);
 
-    string ip = resolve((unsigned char *)recvMsg, len,recvlen);
+    string ip = " ";
+    ip = resolve((unsigned char *)recvMsg, len,recvlen);
+
     return  ip;
 }
 
 resolveDNS::resolveDNS() {
     udpsockfd = common::createSocket(AF_INET, SOCK_DGRAM, 0);
     dnsServe.sin_family=AF_INET;
-    dnsServe.sin_addr.s_addr=inet_addr("114.114.114.114");
+    dnsServe.sin_addr.s_addr=inet_addr("192.168.1.1");
     dnsServe.sin_port = htons(53);
 }
