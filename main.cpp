@@ -62,17 +62,53 @@ int main() {
     {
         socklen_t len = sizeof(SA);
         connfd = accept(listenfd, (SA *) &clientaddr, &len);
-        int childpid    = fork();
+
+        struct sockaddr_in serv, guest;
+        char serv_ip[20];
+        char guest_ip[20];
+        socklen_t serv_len = sizeof(serv);
+        socklen_t guest_len = sizeof(guest);
+        getsockname(connfd, (struct sockaddr *)&serv, &serv_len);
+        getpeername(connfd, (struct sockaddr *)&guest, &guest_len);
+        inet_ntop(AF_INET, &serv.sin_addr, serv_ip, sizeof(serv_ip));
+        inet_ntop(AF_INET, &guest.sin_addr, guest_ip, sizeof(guest_ip));
+        printf("host %s:%d guest %s:%d\n", serv_ip, ntohs(serv.sin_port), guest_ip, ntohs(guest.sin_port));
+
+
+
+
+        int childpid = fork();
         if(childpid == 0)  //child
         {
             close(listenfd);
-            while(1)
+//            while(1)
             {
 
 
                 struct in_addr;
                 memset(buf, 0, sizeof(BUFSIZE));
                 int len = recv(connfd, buf, BUFSIZE, 0);
+                for(int i=0;i<len;i++)
+                    printf("%x", buf[i]);
+                printf("\n");
+                char a[2];
+                a[0] = 0x05;
+                a[1] = 0x00;
+                send(connfd, a,2,0);
+                len = recv(connfd, buf, BUFSIZE, 0);
+                for(int i=0;i<len;i++)
+                {
+                    printf("%d ", buf[i]);
+//                    printf("%c", buf[i]);
+                }
+                printf("\n");
+                for(int i=0;i<len;i++)
+                {
+                    printf("%c ", buf[i]);
+//                    printf("%c", buf[i]);
+                }
+
+                return 0;
                 if(len == 0)
                     break;
 
