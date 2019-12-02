@@ -6,25 +6,29 @@
 #define FAKESOCKS_TCPHANDLER_H
 
 #include "commonHeaders.h"
+#include "eventLoop.h"
 
 #define STAGE_INIT 1
 typedef struct sockaddr SA;
 typedef struct sockaddr_in  SAin;
-using namespace std;
+//using namespace std;
+
+class eventLoop;
+
 class TCPhandler {
 
 private:
 
 
-    shared_ptr<SAin> client;
+    std::shared_ptr<SAin> _client;
     int _listensock;
     int _is_client;
-    int _stage;
-    int _loop; //TODO:loopevent
-
+//    int _stage;
+//    eventLoop * _loop; //TODO:loopevent
+    eventLoop * _loop;
 
 public:
-    TCPhandler(int is_local, int loop);
+    TCPhandler(bool is_local, eventLoop * loop);
     int run();
     int addloop();
 
