@@ -37,4 +37,32 @@ public:
 };
 
 
+class TCPrelayHandler
+{
+private:
+
+    int _clientfd;
+    bool _is_local;
+    int _remotrfd;
+    std::shared_ptr<SAin> _clientaddr;
+    std::shared_ptr<SAin> _serveraddr;//(new SAin);
+    eventLoop * _loop;
+    int stage;
+
+public:
+    TCPrelayHandler(int confd, bool is_local, eventLoop * loop){
+        if(is_local)
+        {
+
+            _clientfd = confd;
+            _is_local = is_local;
+//            loop->add_fd(confd,EPOLLIN | EPOLLET);
+            this->_loop = loop;
+        }
+    }
+
+    int event_handler(int fd ,uint32_t events);
+};
+
+
 #endif //FAKESOCKS_TCPHANDLER_H

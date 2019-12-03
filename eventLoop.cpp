@@ -5,6 +5,7 @@
 #include "eventLoop.h"
 
 
+
 eventLoop::eventLoop() {
 
     _epollfd = epoll_create(FDSIZE);
@@ -38,10 +39,28 @@ int eventLoop::looprun() {
 //        printf("action 1 , %d \n",nfds);
         for(int i=0;i<nfds;i++)
         {
-            printf("action \n");
             if(_events[i].data.fd==_listenfd)
             {
-                printf("recive \n");
+                printf("recive  \n");
+                SAin clientaddr;
+                socklen_t  len = sizeof(clientaddr);
+                int confd = accept(_listenfd, (SA *)&clientaddr, &len);
+                this->add_fd(confd, EPOLLIN | EPOLLET);
+                std::shared_ptr<TCPrelayHandler> tcpRelayHandler(new TCPrelayHandler(confd, true, this));
+                fdmap.insert(std::pair<int, std::shared_ptr<TCPrelayHandler> >(confd, tcpRelayHandler));
+                int a;
+            } else{
+
+                printf("send \n");
+                int fd = _events[i].data.fd;
+
+                uint32_t event = _events[i].events;
+                auto  iter = fdmap.find(fd);
+                auto temphandler = iter->second;
+                temphandler->event_handler(fd , event);
+
+
+
             }
         }
     }
@@ -52,5 +71,24 @@ int eventLoop::looprun() {
 int eventLoop::bindListenfd(int listenfd) {
     this->_listenfd = listenfd;
     return 0;
+}
+
+int eventLoop::add_to_fd_map(int confd, TCPrelayHandler *tcprelayHandler) {
+
+    if(!tcprelayHandler)
+    {
+        perror("tcprelayHandler NULL");
+        return -1;
+    }
+    std::map<int , std::shared_ptr<TCPrelayHandler>>::iterator iter  = this->fdmap.find(confd);
+    if(iter == this->fdmap.end())
+    {
+        fdmap.insert(std::pair<int, TCPrelayHandler*>(confd, tcprelayHandler));
+
+    } else
+    {
+        perror("confd has in fdmap");
+        return 0;
+    }
 }
 
