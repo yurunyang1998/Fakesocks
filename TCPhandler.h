@@ -7,8 +7,14 @@
 
 #include "commonHeaders.h"
 #include "eventLoop.h"
+#define STAGE_INIT_0 1
+#define STAGE_INIT_1 2
+#define STAGE_INIT_2 3
+#define STAGE_INIT_3 4
+#define STAGE_INIT_4 5
+//#defin
 
-#define STAGE_INIT 1
+
 typedef struct sockaddr SA;
 typedef struct sockaddr_in  SAin;
 //using namespace std;
@@ -23,7 +29,6 @@ private:
     std::shared_ptr<SAin> _client;
     int _listensock;
     int _is_client;
-//    int _stage;
 //    eventLoop * _loop; //TODO:loopevent
     eventLoop * _loop;
 
@@ -47,7 +52,7 @@ private:
     std::shared_ptr<SAin> _clientaddr;
     std::shared_ptr<SAin> _serveraddr;//(new SAin);
     eventLoop * _loop;
-    int stage;
+    int _stage;
 
 public:
     TCPrelayHandler(int confd, bool is_local, eventLoop * loop){
@@ -58,6 +63,9 @@ public:
             _is_local = is_local;
 //            loop->add_fd(confd,EPOLLIN | EPOLLET);
             this->_loop = loop;
+            _stage = STAGE_INIT_0;
+
+
         }
     }
 

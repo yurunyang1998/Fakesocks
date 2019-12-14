@@ -42,11 +42,36 @@ TCPhandler::TCPhandler(bool is_client, eventLoop * loop) { //TODO:add config fil
 
 int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
 
-    std::cout<<_is_local<<std::endl;
-    if(_is_local){
+    if(_is_local) {
         char data[2048];
         int len = recv(fd, data, 2048, 0);
         //TODO:five stages;
+        for(int i=0;i<len;i++)
+            printf("%d", data[i]);
+        if (this->_stage == STAGE_INIT_0)
+        {
+            if(data[0]==5 && data[1]==1 && data[2]==0)
+            {
+                unsigned char  buf[100];
+                buf[0]= 0x5;
+                buf[1]=0x0;
+                common::sendData(fd, buf, 3);
+                int len = common::recvData(fd, (char *)buf);
+                for(int i=0;i<len;i++)
+                    printf("%d ", buf[i]);
+
+            } else
+            {
+                return -1;
+                //TODO: proxy protocol error ,not sock5
+            }
+
+
+        }
+
+
+
+
 
 
     }

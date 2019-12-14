@@ -41,7 +41,7 @@ int eventLoop::looprun() {
         {
             if(_events[i].data.fd==_listenfd)
             {
-                printf("recive  \n");
+                printf("get listen request  \n");
                 SAin clientaddr;
                 socklen_t  len = sizeof(clientaddr);
                 int confd = accept(_listenfd, (SA *)&clientaddr, &len);
@@ -51,7 +51,7 @@ int eventLoop::looprun() {
                 int a;
             } else{
 
-                printf("send \n");
+                printf("get data \n");
                 int fd = _events[i].data.fd;
 
                 uint32_t event = _events[i].events;

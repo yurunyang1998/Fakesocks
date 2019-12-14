@@ -1,0 +1,3 @@
+/home/yurunyang/Desktop/Fakesocks/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/yurunyang/Desktop/Fakesocks/cmake-build-debug/CMakeFiles/fakesocks.dir
+/home/yurunyang/Desktop/Fakesocks/cmake-build-debug/CMakeFiles/edit_cache.dir
