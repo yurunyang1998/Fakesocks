@@ -1,1 +1,0 @@
-/usr/bin/c++  -g   CMakeFiles/fakesocks.dir/main.cpp.o CMakeFiles/fakesocks.dir/resolveDNS.cpp.o CMakeFiles/fakesocks.dir/common.cpp.o CMakeFiles/fakesocks.dir/TCPhandler.cpp.o CMakeFiles/fakesocks.dir/eventLoop.cpp.o CMakeFiles/fakesocks.dir/manager.cpp.o  -o fakesocks 
