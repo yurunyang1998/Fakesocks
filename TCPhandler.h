@@ -26,7 +26,7 @@ typedef struct sock5result
     unsigned  char cmd;  // tcp 1  or udp 3
     unsigned  char rsv;  // 0 default
     unsigned  char atyp; // 1 ip4,3 domain, 4 ip
-    unsigned  char dstaddr[100]; // the first num is length of dstaddr, and followed by dstaddr , which is ip or domain
+    char dstaddr[100]; // the first num is length of dstaddr, and followed by dstaddr , which is ip or domain
     int dstport; // two byte to represent port;
 
 
@@ -67,13 +67,14 @@ private:
 
     int _clientfd;
     bool _is_local;
-    int _remotrfd;
+    int _remotefd;
     std::shared_ptr<SAin> _clientaddr;
     std::shared_ptr<SAin> _serveraddr;//(new SAin);
     eventLoop * _loop;
     int _stage;
-    int resovlesock5(unsigned char * data, sock5result * sock5Result);
-
+    sock5result sock5Result;
+    int resovlesock5(char * data, sock5result * sock5Result);
+    int realyRequest(int fd, const sock5result  &sock5result1);
 
 public:
     TCPrelayHandler(int confd, bool is_local, eventLoop * loop){

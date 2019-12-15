@@ -77,14 +77,30 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
             {
                 memset(data,0,2048);
                 int len = common::recvData(fd, data);  // browser send protocol ,ip,and port
-                sock5result sock5Result;
-                resovlesock5((unsigned char *) data, &sock5Result);
+//                sock5result sock5Result;
+                resovlesock5( data, &sock5Result);
+                realyRequest(_remotefd, sock5Result);
+
+
+
+
+
+
+
+
+                this->_stage = STAGE_INIT_2;
+
                 int a;
+            }
+            else if (this->_stage == STAGE_INIT_2)
+            {
+
             }
 
 
+
         }
-        else if(fd == this->_remotrfd)
+        else if(fd == this->_remotefd)
         {
 
 
@@ -111,7 +127,7 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
     return 0;
 }
 
-int TCPrelayHandler::resovlesock5( unsigned char *data, sock5result *sock5Result) {
+int TCPrelayHandler::resovlesock5(char *data, sock5result *sock5Result) {
     if(sock5Result != nullptr and data!= nullptr)
     {
         sock5Result->version = data[0];
@@ -133,6 +149,7 @@ int TCPrelayHandler::resovlesock5( unsigned char *data, sock5result *sock5Result
             int low = data[pos+1];
             sock5Result->dstport= high+low;
 
+
         }
         else if(data[3]==1)  //ipv4
         {
@@ -147,6 +164,7 @@ int TCPrelayHandler::resovlesock5( unsigned char *data, sock5result *sock5Result
             int low = data[9];
             sock5Result->dstport= high+low;
 
+
         }
         else if(data[3] == 6)
         {
@@ -156,4 +174,39 @@ int TCPrelayHandler::resovlesock5( unsigned char *data, sock5result *sock5Result
 
     }
     return -1;
+}
+
+int TCPrelayHandler::realyRequest(int fd, const sock5result &sock5result1) {
+
+    if(sock5result1.cmd == 1)  // tcp
+    {
+        if(sock5result1.atyp == 3 or sock5result1.atyp == '1') //ipv4
+        {
+            _remotefd = common::createSocket(AF_INET, SOCK_STREAM, 0);
+            char * tempip = (char *)sock5result1.dstaddr;
+            std::string dstip(++tempip);
+            std::shared_ptr<SAin> serveaddr(common::creatServeraddr((char*)dstip.c_str(),sock5result1.dstport));
+            int result = connect(_remotefd,(SA*)serveaddr.get(), sizeof(SA));
+            if(result == 1)
+            {
+                printf("successful\n");
+            } else
+            {
+                perror("connect");
+            }
+        }
+        else if(sock5result1.atyp==3)  //domain
+        {
+
+        } else if(sock5result1.atyp == 6) //ipv6
+        {
+
+        }
+    } else if(sock5result1.cmd == 3) //udp
+    {
+
+    }
+
+
+    return 0;
 }
