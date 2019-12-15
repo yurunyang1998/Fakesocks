@@ -26,8 +26,8 @@ typedef struct sock5result
     unsigned  char cmd;  // tcp 1  or udp 3
     unsigned  char rsv;  // 0 default
     unsigned  char atyp; // 1 ip4,3 domain, 4 ip
-    unsigned  char * dstaddr; // the first num is length of dstaddr, and followed by dstaddr , which is ip or domain
-    unsigned  char dstport[2]; // two byte to represent port;
+    unsigned  char dstaddr[100]; // the first num is length of dstaddr, and followed by dstaddr , which is ip or domain
+    int dstport; // two byte to represent port;
 
 
 }sock5result;

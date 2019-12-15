@@ -77,14 +77,9 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
             {
                 memset(data,0,2048);
                 int len = common::recvData(fd, data);  // browser send protocol ,ip,and port
-
-
-
-
-
-
-
-
+                sock5result sock5Result;
+                resovlesock5((unsigned char *) data, &sock5Result);
+                int a;
             }
 
 
@@ -116,7 +111,7 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
     return 0;
 }
 
-int TCPrelayHandler::resovlesock5(unsigned char *data, sock5result *sock5Result) {
+int TCPrelayHandler::resovlesock5( unsigned char *data, sock5result *sock5Result) {
     if(sock5Result != nullptr and data!= nullptr)
     {
         sock5Result->version = data[0];
@@ -125,14 +120,18 @@ int TCPrelayHandler::resovlesock5(unsigned char *data, sock5result *sock5Result)
         sock5Result->atyp= data[3];
         if(data[3]==3)   //domain
         {
-            for(int i=data[3]+1, k=0;i<4+data[4];i++,k++)
+            for(int i=data[3]+1, k=0;i<=4+data[4];i++,k++)
             {
                 sock5Result->dstaddr[k] = data[i];
             }
 
-            int pos = 4+data[4];
-            sock5Result->dstport[0] = data[pos];
-            sock5Result->dstport[1] = data[pos+1];
+            int pos = 5+data[4];
+
+
+            int high =  data[pos];
+            high = high<<8;
+            int low = data[pos+1];
+            sock5Result->dstport= high+low;
 
         }
         else if(data[3]==1)  //ipv4
@@ -141,14 +140,20 @@ int TCPrelayHandler::resovlesock5(unsigned char *data, sock5result *sock5Result)
             {
                 sock5Result->dstaddr[k] = data[i];
             }
-            sock5Result->dstport[0] = data[8];
-            sock5Result->dstport[1] = data[9];
+
+
+            int high =  data[8];
+            high = high<<8;
+            int low = data[9];
+            sock5Result->dstport= high+low;
+
         }
         else if(data[3] == 6)
         {
             //TODO: ipv6
         }
+        return  0;
 
     }
-    return 0;
+    return -1;
 }
