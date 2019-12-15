@@ -30,3 +30,18 @@ int common::createSocket(int family, int type, int protocol) {
 //        std::cout<<"fd: "<<n<<std::endl;
         return (n);
 }
+
+int common::sendData(int fd, unsigned char *data, int datalen) {
+
+    int result = send(fd, data, datalen, 0);
+
+
+    return 0;
+}
+
+int common::recvData(int fd, char *buf){
+
+    int len = recv(fd, buf, 2048, 0);
+
+    return len;
+}

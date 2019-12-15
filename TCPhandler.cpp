@@ -34,7 +34,7 @@ TCPhandler::TCPhandler(bool is_client, eventLoop * loop) { //TODO:add config fil
             _loop->bindListenfd(this->_listensock);
 
         }
-        printf("create listen socket");
+//        printf("create listen socket");
 
     }
 
@@ -43,18 +43,61 @@ TCPhandler::TCPhandler(bool is_client, eventLoop * loop) { //TODO:add config fil
 
 int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
 
-    std::cout<<_is_local<<std::endl;
-    if(_is_local){
-        char data[2048];
-        int len = recv(fd, data, 2048, 0);
-        //TODO:five stages;
+    if(_is_local) {
+
 
         if(fd == this->_clientfd)
         {
 
-            if(this->stage == )
+            char data[2048];
+            memset(data, 0, 2048);
+            //TODO:five stages;
+            if (this->_stage == STAGE_INIT_0)      // browser shake hand request
+            {
 
-        }else if(fd == this->_remotrfd){
+                int len = recv(fd, data, 2048, 0);
+                for(int i=0;i<len;i++)
+                    printf("%d", data[i]);
+                fflush(stdout);
+                if(data[0]==5 && data[1]==1 && data[2]==0)   //verify sock5 protocol
+                {
+                    unsigned char  buf[100];
+                    buf[0]= 0x5;
+                    buf[1]= 0x0;
+                    common::sendData(fd, buf, 3);
+                    this->_stage = STAGE_INIT_1;
+                    return 0;
+                } else
+                {
+                    return -1;
+                    //TODO: proxy protocol error ,not sock5
+                }
+            }
+            else if (this->_stage == STAGE_INIT_1)
+            {
+                memset(data,0,2048);
+                int len = common::recvData(fd, data);  // browser send protocol ,ip,and port
+
+
+
+
+
+
+
+
+            }
+
+
+        }
+        else if(fd == this->_remotrfd)
+        {
+
+
+
+
+
+
+
 
 
 
@@ -70,5 +113,42 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
     }
 
 
+    return 0;
+}
+
+int TCPrelayHandler::resovlesock5(unsigned char *data, sock5result *sock5Result) {
+    if(sock5Result != nullptr and data!= nullptr)
+    {
+        sock5Result->version = data[0];
+        sock5Result->cmd =data[1];
+        sock5Result->rsv= data[2];
+        sock5Result->atyp= data[3];
+        if(data[3]==3)   //domain
+        {
+            for(int i=data[3]+1, k=0;i<4+data[4];i++,k++)
+            {
+                sock5Result->dstaddr[k] = data[i];
+            }
+
+            int pos = 4+data[4];
+            sock5Result->dstport[0] = data[pos];
+            sock5Result->dstport[1] = data[pos+1];
+
+        }
+        else if(data[3]==1)  //ipv4
+        {
+            for(int i=4, k=0;i<8;i++,k++)
+            {
+                sock5Result->dstaddr[k] = data[i];
+            }
+            sock5Result->dstport[0] = data[8];
+            sock5Result->dstport[1] = data[9];
+        }
+        else if(data[3] == 6)
+        {
+            //TODO: ipv6
+        }
+
+    }
     return 0;
 }

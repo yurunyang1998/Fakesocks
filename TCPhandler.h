@@ -8,21 +8,36 @@
 
 #include "commonHeaders.h"
 #include "eventLoop.h"
-
-#define STAGE_INIT 1
-#define STAGE_
-
-#define STAGE_DESTORY 2
-#define STAGE_
-
-
-
-
-
+#define STAGE_INIT_0 1
+#define STAGE_INIT_1 2
+#define STAGE_INIT_2 3
+#define STAGE_INIT_3 4
+#define STAGE_INIT_4 5
+//#defin
 
 typedef struct sockaddr SA;
 typedef struct sockaddr_in  SAin;
 //using namespace std;
+
+
+typedef struct sock5result
+{
+    unsigned  char version;
+    unsigned  char cmd;  // tcp 1  or udp 3
+    unsigned  char rsv;  // 0 default
+    unsigned  char atyp; // 1 ip4,3 domain, 4 ip
+    unsigned  char * dstaddr; // the first num is length of dstaddr, and followed by dstaddr , which is ip or domain
+    unsigned  char dstport[2]; // two byte to represent port;
+
+
+}sock5result;
+
+
+
+
+
+
+
 
 class eventLoop;
 
@@ -34,8 +49,6 @@ private:
     std::shared_ptr<SAin> _client;
     int _listensock;
     int _is_client;
-//    int _stage;
-//    eventLoop * _loop; //TODO:loopevent
     eventLoop * _loop;
 
 public:
@@ -58,7 +71,9 @@ private:
     std::shared_ptr<SAin> _clientaddr;
     std::shared_ptr<SAin> _serveraddr;//(new SAin);
     eventLoop * _loop;
-    int stage;
+    int _stage;
+    int resovlesock5(unsigned char * data, sock5result * sock5Result);
+
 
 public:
     TCPrelayHandler(int confd, bool is_local, eventLoop * loop){
@@ -69,6 +84,9 @@ public:
             _is_local = is_local;
 //            loop->add_fd(confd,EPOLLIN | EPOLLET);
             this->_loop = loop;
+            _stage = STAGE_INIT_0;
+
+
         }
     }
 
