@@ -32,6 +32,7 @@ TCPhandler::TCPhandler(bool is_client, eventLoop * loop) { //TODO:add config fil
 //            _loop->add_fd(this->_listensock,EPOLLIN|EPOLLET);
             _loop->add_fd(_listensock, EPOLLIN | EPOLLET);
             _loop->bindListenfd(this->_listensock);
+
         }
         printf("create listen socket");
 
@@ -47,6 +48,23 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
         char data[2048];
         int len = recv(fd, data, 2048, 0);
         //TODO:five stages;
+
+        if(fd == this->_clientfd)
+        {
+
+            if(this->stage == )
+
+        }else if(fd == this->_remotrfd){
+
+
+
+        }
+        else // wrong socket
+        {
+            perror("wrong socket ,not client or remote ");
+
+        }
+
 
 
     }

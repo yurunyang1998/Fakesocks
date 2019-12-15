@@ -5,10 +5,21 @@
 #ifndef FAKESOCKS_TCPHANDLER_H
 #define FAKESOCKS_TCPHANDLER_H
 
+
 #include "commonHeaders.h"
 #include "eventLoop.h"
 
 #define STAGE_INIT 1
+#define STAGE_
+
+#define STAGE_DESTORY 2
+#define STAGE_
+
+
+
+
+
+
 typedef struct sockaddr SA;
 typedef struct sockaddr_in  SAin;
 //using namespace std;
@@ -54,7 +65,7 @@ public:
         if(is_local)
         {
 
-            _clientfd = confd;
+            this->_clientfd = confd;
             _is_local = is_local;
 //            loop->add_fd(confd,EPOLLIN | EPOLLET);
             this->_loop = loop;
