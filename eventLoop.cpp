@@ -57,8 +57,11 @@ int eventLoop::looprun() {
                 uint32_t event = _events[i].events;
                 auto  iter = fdmap.find(fd);
                 auto temphandler = iter->second;
-                temphandler->event_handler(fd , event);
-
+                int result = temphandler->event_handler(fd , event);
+                if(result == -1)
+                {
+                    fdmap.erase(fd);
+                }
 
 
             }

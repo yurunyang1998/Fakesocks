@@ -11,9 +11,7 @@
 #define STAGE_INIT_0 1
 #define STAGE_INIT_1 2
 #define STAGE_INIT_2 3
-#define STAGE_INIT_3 4
-#define STAGE_INIT_4 5
-//#defin
+#define STAGE_RELAYDATA 4
 
 typedef struct sockaddr SA;
 typedef struct sockaddr_in  SAin;

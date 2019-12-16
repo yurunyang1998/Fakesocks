@@ -61,7 +61,7 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
                 fflush(stdout);
                 if(data[0]==5 && data[1]==1 && data[2]==0)   //verify sock5 protocol
                 {
-                    unsigned char  buf[100];
+                    char  buf[100];
                     buf[0]= 0x5;
                     buf[1]= 0x0;
                     common::sendData(fd, buf, 3);
@@ -69,6 +69,7 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
                     return 0;
                 } else
                 {
+                    close(fd);
                     return -1;
                     //TODO: proxy protocol error ,not sock5
                 }
@@ -79,22 +80,48 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
                 int len = common::recvData(fd, data);  // browser send protocol ,ip,and port
 //                sock5result sock5Result;
                 resovlesock5( data, &sock5Result);
-                realyRequest(_remotefd, sock5Result);
+                int result = realyRequest(_remotefd, sock5Result); //TODO: 应该写成异步回调式，非阻塞的
+                if(result == 0)
+                {
+                    memset(data,0, 2048);
+                    data[0] = 0x05;
+                    data[1] = 0x00;
+                    data[2] = 0x00;
+                    if(sock5Result.atyp == 3)
+                    {
+                        data[3] = 0x03;
+                    } else if (sock5Result.atyp == 1)
+                    {
+                        data[3] = 0x01;
+                    } else if (sock5Result.atyp == 6)
+                    {
+                        data[3] = 0x06;
+                    }
+                    data[4] = 0x00;
+                    data[5] = 0x00;
+                    data[6] = 0x00;
+                    data[7] = 0x00;
+                    data[8] = 0x00;
+                    data[9] = 0x00;
 
+                    common::sendData(fd,data,30);
+                    common::recvData(fd,data);
 
+                    _stage = STAGE_RELAYDATA;
+                    return 0;
 
+                }
+                else{ //TODO:can not access to the dst
+                    close(fd);
+                    return -1;
+                }
 
-
-
-
-
-                this->_stage = STAGE_INIT_2;
-
-                int a;
             }
-            else if (this->_stage == STAGE_INIT_2)
+            else if (this->_stage == STAGE_RELAYDATA)  //relay data to remote server
             {
-
+                memset(data, 0, 2048);
+                common::recvData(fd,data);
+                common::sendData(_remotefd, data, 2048);
             }
 
 
@@ -102,14 +129,10 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
         }
         else if(fd == this->_remotefd)
         {
-
-
-
-
-
-
-
-
+            char data[2048];
+            memset(data, 2048, 0);
+            common::recvData(fd, data);
+            common::sendData(_clientfd, data, 2048);
 
 
         }
@@ -180,19 +203,22 @@ int TCPrelayHandler::realyRequest(int fd, const sock5result &sock5result1) {
 
     if(sock5result1.cmd == 1)  // tcp
     {
-        if(sock5result1.atyp == 3 or sock5result1.atyp == '1') //ipv4
+        if(sock5result1.atyp == 1 or (sock5result1.dstaddr[1]<='9' and sock5result1.dstaddr[1]>='1')) //ipv4
         {
             _remotefd = common::createSocket(AF_INET, SOCK_STREAM, 0);
+            _loop->add_to_fd_map(_remotefd, this);
             char * tempip = (char *)sock5result1.dstaddr;
             std::string dstip(++tempip);
             std::shared_ptr<SAin> serveaddr(common::creatServeraddr((char*)dstip.c_str(),sock5result1.dstport));
             int result = connect(_remotefd,(SA*)serveaddr.get(), sizeof(SA));
-            if(result == 1)
+            if(result == 0)
             {
                 printf("successful\n");
+                return 0;
             } else
             {
                 perror("connect");
+                return -1;
             }
         }
         else if(sock5result1.atyp==3)  //domain

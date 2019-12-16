@@ -31,10 +31,10 @@ int common::createSocket(int family, int type, int protocol) {
         return (n);
 }
 
-int common::sendData(int fd, unsigned char *data, int datalen) {
+int common::sendData(int fd,  char *data, int datalen) {
 
     int result = send(fd, data, datalen, 0);
-
+    printf("result %d\n",result);
 
     return 0;
 }

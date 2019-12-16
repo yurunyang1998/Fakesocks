@@ -18,7 +18,7 @@ namespace  common{
 
     struct sockaddr_in  * creatServeraddr(char* ip, int port);
 
-    int sendData(int fd, unsigned char * data, int datalen);
+    int sendData(int fd, char * data, int datalen);
     int recvData(int fd, char *buf );
 }
 
