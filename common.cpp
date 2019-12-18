@@ -34,11 +34,15 @@ int common::createSocket(int family, int type, int protocol) {
 int common::sendData(int fd,  char *data, int datalen) {
 
     int result = send(fd, data, datalen, 0);
+    for(int i=0;i<result;i++)
+        printf("%c", data[i]);
     return result;
 }
 
 int common::recvData(int fd, char *buf){
 
     int len = recv(fd, buf, 2048, 0);
+    for(int i=0;i<len;i++)
+        printf("%c", buf[i]);
     return len;
 }

@@ -177,13 +177,19 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
             } else if (this->_stage == STAGE_RELAYDATA)  //relay data to remote server
             {
                 memset(data, 0, 2048);
-                int len = common::recvData(fd,data);
-                for(int i=0;i<len;i++)
-                    printf("%c", data[i]);
-                common::sendData(_remotefd, data, 2048);
-                memset(data,0, 2048);
-                common::recvData(_remotefd, data);
-                common::sendData(fd, data, 2048);
+                while (true)
+                {
+                    int len = common::recvData(fd,data);
+                    if(len <=0)
+                        break;
+                    common::sendData(_remotefd, data, 2048);
+                    memset(data,0, 2048);
+                    len = common::recvData(_remotefd, data);
+                    if(len <=0)
+                        break;
+                    common::sendData(fd, data, 2048);
+                }
+
             }
 
 
