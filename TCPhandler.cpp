@@ -24,7 +24,7 @@ TCPhandler::TCPhandler(bool is_client, eventLoop * loop) { //TODO:add config fil
         this->_listensock = common::createSocket(AF_INET, SOCK_STREAM, 0);
         int on =1;
         int ret = setsockopt(_listensock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on) );
-        _client = std::shared_ptr<SAin>(common::creatServeraddr("127.0.0.1",8889));
+        _client = std::shared_ptr<SAin>(common::creatServeraddr("127.0.0.1",1082));
         bind(this->_listensock, (SA *)_client.get(), sizeof(SAin));
         listen(_listensock, 1024);
         if(loop)
@@ -46,8 +46,7 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
     if(_is_local) {
 
 
-        if(fd == this->_clientfd)
-        {
+        if (fd == this->_clientfd) {
 
             char data[2048];
             memset(data, 0, 2048);
@@ -56,96 +55,153 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
             {
 
                 int len = recv(fd, data, 2048, 0);
-                for(int i=0;i<len;i++)
+                for (int i = 0; i < len; i++)
                     printf("%d", data[i]);
                 fflush(stdout);
-                if(data[0]==5 && data[1]==1 && data[2]==0)   //verify sock5 protocol
+                if (data[0] == 5 && data[1] == 1 && data[2] == 0)   //verify sock5 protocol
                 {
-                    char  buf[100];
-                    buf[0]= 0x5;
-                    buf[1]= 0x0;
-                    common::sendData(fd, buf, 3);
+                    char buf[100];
+                    buf[0] = 0x5;
+                    buf[1] = 0x0;
+                    common::sendData(fd, buf, 2);
                     this->_stage = STAGE_INIT_1;
+
+//
+//                    int len = common::recvData(fd, data);  // browser send protocol ,ip,and port
+////                sock5result sock5Result;
+//                    resovlesock5( data, &sock5Result);
+//                    int result = realyRequest(_remotefd, sock5Result); //TODO: 应该写成异步回调式，非阻塞的
+//                    if(1) {
+//                        unsigned char data[10];
+//                        memset(data, 0, 10);
+//                        data[0] = 05;
+//                        data[1] = 00;
+//                        data[2] = 00;
+//                        if (sock5Result.atyp == 3) {
+//                            data[3] = 1;
+//                        } else if (sock5Result.atyp == 1) {
+//                            data[3] = 1;
+//                        } else if (sock5Result.atyp == 6) {
+//                            data[3] = 4;
+//                        }
+//                        //data[3] = 1;
+//                        SA sockaddr;
+//                        socklen_t sal = sizeof(SA);
+//                        //getsockname(fd, &sockaddr, &sal);
+//                        data[4] = 0;
+//                        data[5] = 0;
+//                        data[6] = 0;
+//                        data[7] = 0;
+//                        data[8] = 0;
+//                        data[9] = 0;
+//
+//                        int len = common::sendData(fd,(char *)data, 10);
+//                        if(len<0)
+//                            perror("send");
+//
+//
+////                        int len = common::sendData(fd,(char *)data, 10);
+////                        if(len<0)
+////                            perror("send");
+//
+//                        len = common::recvData(fd,(char *)data);
+////                    int len =read(_clientfd, data, 200);
+//                        if(len == -1)
+//                        {
+//                            perror("read");
+//                        }
+//                        for(int i=0;i<len;i++)
+//                            printf("%c", data[i]);
+
                     return 0;
-                } else
-                {
-                    close(fd);
+                } else {
+                    //close(fd);
                     return -1;
                     //TODO: proxy protocol error ,not sock5
                 }
             }
-            else if (this->_stage == STAGE_INIT_1)
-            {
-                memset(data,0,2048);
+            else if (this->_stage == STAGE_INIT_1) {
+
+                char data[2048];
+                memset(data, 0, 2048);
                 int len = common::recvData(fd, data);  // browser send protocol ,ip,and port
 //                sock5result sock5Result;
-                resovlesock5( data, &sock5Result);
+                resovlesock5(data, &sock5Result);
                 int result = realyRequest(_remotefd, sock5Result); //TODO: 应该写成异步回调式，非阻塞的
-                if(result == 0)
-                {
-                    memset(data,0, 2048);
+                if (result == 0) {
+                    unsigned char data[2048];
+                    memset(data, 0, 10);
                     data[0] = 0x05;
                     data[1] = 0x00;
                     data[2] = 0x00;
-                    if(sock5Result.atyp == 3)
-                    {
-                        data[3] = 0x03;
-                    } else if (sock5Result.atyp == 1)
-                    {
-                        data[3] = 0x01;
-                    } else if (sock5Result.atyp == 6)
-                    {
-                        data[3] = 0x06;
+                    if (sock5Result.atyp == 3) {
+                        data[3] = 1;
+                    } else if (sock5Result.atyp == 1) {
+                        data[3] = 1;
+                    } else if (sock5Result.atyp == 6) {
+                        data[3] = 4;
                     }
-                    data[4] = 0x00;
-                    data[5] = 0x00;
-                    data[6] = 0x00;
-                    data[7] = 0x00;
-                    data[8] = 0x00;
-                    data[9] = 0x00;
 
-                    common::sendData(fd,data,30);
-                    common::recvData(fd,data);
+//                    SA sockaddr;
+//                    socklen_t sal = sizeof(SA);
+//                    getsockname(fd, &sockaddr, &sal);
+                    data[4] = 0;
+                    data[5] = 0;
+                    data[6] = 0;
+                    data[7] = 0;
+                    data[8] = 0;
+                    data[9] = 0;
+                    //data[10] ='\n';
+                    int i = write(fd, data, 10);
+                    if (i < 0)
+                        perror("write");
 
+
+                    //common::sendData(fd, (char *) data,30);
+                    memset(data, 0, 2048);
+                    //int len = common::recvData(fd,(char *)data);
+//                    int len = read(_clientfd, data, 2048);
+//                    if (len == -1) {
+//                        perror("read");
+//                    }
+//                    for (int i = 0; i < len; i++)
+//                        printf("%c", data[i]);
                     _stage = STAGE_RELAYDATA;
                     return 0;
 
-                }
-                else{ //TODO:can not access to the dst
-                    close(fd);
+                } else { //TODO:can not access to the dst
+                    //close(fd);
                     return -1;
                 }
 
-            }
-            else if (this->_stage == STAGE_RELAYDATA)  //relay data to remote server
+            } else if (this->_stage == STAGE_RELAYDATA)  //relay data to remote server
             {
                 memset(data, 0, 2048);
-                common::recvData(fd,data);
+                int len = common::recvData(fd,data);
+                for(int i=0;i<len;i++)
+                    printf("%c", data[i]);
                 common::sendData(_remotefd, data, 2048);
+                memset(data,0, 2048);
+                common::recvData(_remotefd, data);
+                common::sendData(fd, data, 2048);
             }
 
 
-
-        }
-        else if(fd == this->_remotefd)
-        {
+        } else if (fd == this->_remotefd) {
             char data[2048];
             memset(data, 2048, 0);
             common::recvData(fd, data);
             common::sendData(_clientfd, data, 2048);
 
 
-        }
-        else // wrong socket
+        } else // wrong socket
         {
             perror("wrong socket ,not client or remote ");
 
         }
 
 
-
     }
-
 
     return 0;
 }
@@ -209,7 +265,12 @@ int TCPrelayHandler::realyRequest(int fd, const sock5result &sock5result1) {
             _loop->add_to_fd_map(_remotefd, this);
             char * tempip = (char *)sock5result1.dstaddr;
             std::string dstip(++tempip);
-            std::shared_ptr<SAin> serveaddr(common::creatServeraddr((char*)dstip.c_str(),sock5result1.dstport));
+
+
+            //TODO:
+
+
+            std::shared_ptr<SAin> serveaddr(common::creatServeraddr(((char*)dstip.c_str()),sock5result1.dstport));
             int result = connect(_remotefd,(SA*)serveaddr.get(), sizeof(SA));
             if(result == 0)
             {

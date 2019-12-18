@@ -34,14 +34,11 @@ int common::createSocket(int family, int type, int protocol) {
 int common::sendData(int fd,  char *data, int datalen) {
 
     int result = send(fd, data, datalen, 0);
-    printf("result %d\n",result);
-
-    return 0;
+    return result;
 }
 
 int common::recvData(int fd, char *buf){
 
     int len = recv(fd, buf, 2048, 0);
-
     return len;
 }
