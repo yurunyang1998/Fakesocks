@@ -48,15 +48,14 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
 
         if (fd == this->_clientfd) {
 
-            char data[2048];
-            memset(data, 0, 2048);
+            char data[4096];
+            memset(data, 0, 4096);
             //TODO:five stages;
             if (this->_stage == STAGE_INIT_0)      // browser shake hand request
             {
 
-                int len = recv(fd, data, 2048, 0);
-                for (int i = 0; i < len; i++)
-                    printf("%d", data[i]);
+                int len = recv(fd, data, 4096, 0);
+
                 fflush(stdout);
                 if (data[0] == 5 && data[1] == 1 && data[2] == 0)   //verify sock5 protocol
                 {
@@ -65,54 +64,6 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
                     buf[1] = 0x0;
                     common::sendData(fd, buf, 2);
                     this->_stage = STAGE_INIT_1;
-
-//
-//                    int len = common::recvData(fd, data);  // browser send protocol ,ip,and port
-////                sock5result sock5Result;
-//                    resovlesock5( data, &sock5Result);
-//                    int result = realyRequest(_remotefd, sock5Result); //TODO: 应该写成异步回调式，非阻塞的
-//                    if(1) {
-//                        unsigned char data[10];
-//                        memset(data, 0, 10);
-//                        data[0] = 05;
-//                        data[1] = 00;
-//                        data[2] = 00;
-//                        if (sock5Result.atyp == 3) {
-//                            data[3] = 1;
-//                        } else if (sock5Result.atyp == 1) {
-//                            data[3] = 1;
-//                        } else if (sock5Result.atyp == 6) {
-//                            data[3] = 4;
-//                        }
-//                        //data[3] = 1;
-//                        SA sockaddr;
-//                        socklen_t sal = sizeof(SA);
-//                        //getsockname(fd, &sockaddr, &sal);
-//                        data[4] = 0;
-//                        data[5] = 0;
-//                        data[6] = 0;
-//                        data[7] = 0;
-//                        data[8] = 0;
-//                        data[9] = 0;
-//
-//                        int len = common::sendData(fd,(char *)data, 10);
-//                        if(len<0)
-//                            perror("send");
-//
-//
-////                        int len = common::sendData(fd,(char *)data, 10);
-////                        if(len<0)
-////                            perror("send");
-//
-//                        len = common::recvData(fd,(char *)data);
-////                    int len =read(_clientfd, data, 200);
-//                        if(len == -1)
-//                        {
-//                            perror("read");
-//                        }
-//                        for(int i=0;i<len;i++)
-//                            printf("%c", data[i]);
-
                     return 0;
                 } else {
                     //close(fd);
@@ -122,14 +73,14 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
             }
             else if (this->_stage == STAGE_INIT_1) {
 
-                char data[2048];
-                memset(data, 0, 2048);
+                char data[4096];
+                memset(data, 0, 4096);
                 int len = common::recvData(fd, data);  // browser send protocol ,ip,and port
 //                sock5result sock5Result;
                 resovlesock5(data, &sock5Result);
                 int result = realyRequest(_remotefd, sock5Result); //TODO: 应该写成异步回调式，非阻塞的
                 if (result == 0) {
-                    unsigned char data[2048];
+                    unsigned char data[4096];
                     memset(data, 0, 10);
                     data[0] = 0x05;
                     data[1] = 0x00;
@@ -156,16 +107,6 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
                     if (i < 0)
                         perror("write");
 
-
-                    //common::sendData(fd, (char *) data,30);
-                    memset(data, 0, 2048);
-                    //int len = common::recvData(fd,(char *)data);
-//                    int len = read(_clientfd, data, 2048);
-//                    if (len == -1) {
-//                        perror("read");
-//                    }
-//                    for (int i = 0; i < len; i++)
-//                        printf("%c", data[i]);
                     _stage = STAGE_RELAYDATA;
                     return 0;
 
@@ -176,28 +117,87 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
 
             } else if (this->_stage == STAGE_RELAYDATA)  //relay data to remote server
             {
-                memset(data, 0, 2048);
-                while (true)
+                memset(data, 0, 4096);
+
+
+                //while(1)
                 {
-                    int len = common::recvData(fd,data);
-                    if(len <=0)
-                        break;
-                    common::sendData(_remotefd, data, 2048);
-                    memset(data,0, 2048);
+                    int len = common::recvData(fd, data);
+//                    if(len<=0)
+                //
+
+                    printf("1  %d", len);
+                    for(int i=0;i<len;i++)
+                        printf("%c",data[i]);
+                    printf("\n\n\n\n");
+
+
+
+                    len = common::sendData(_remotefd, data, len);
+
+
+                    printf("2  %d", len);
+                    for(int i=0;i<len;i++)
+                        printf("%c",data[i]);
+                    printf("\n\n\n\n");
+
+
+
                     len = common::recvData(_remotefd, data);
-                    if(len <=0)
-                        break;
-                    common::sendData(fd, data, 2048);
+
+
+                    printf("3  %d", len);
+                    for(int i=0;i<len;i++)
+                        printf("%c",data[i]);
+                    printf("\n\n\n\n");
+
+
+
+
+                    len = common::sendData(fd, data,len);
+
+
+                    printf("4  %d", len);
+                    for(int i=0;i<len;i++)
+                        printf("%c",data[i]);
+                    printf("\n\n\n\n");
+
+
+
+
+                    if(len == -1)
+                        perror("send");
+
                 }
+
 
             }
 
 
         } else if (fd == this->_remotefd) {
-            char data[2048];
-            memset(data, 2048, 0);
-            common::recvData(fd, data);
-            common::sendData(_clientfd, data, 2048);
+
+            char data[4096];
+            if(this->_stage == STAGE_RELAYDATA)
+            {
+                printf("STAGE RELAYDATA");
+                fflush(stdout);
+                memset(data, 4096, 0);
+                while(1)
+                {
+                    int len = common::recvData(fd, data);
+                    if(len<=0)
+                        break;
+                    len =  common::sendData(_clientfd, data,len);
+                    printf("len :: %d", len);
+                    fflush(stdout);
+                    if(len<=0)
+                    {
+                        perror("send");
+                    }
+                }
+            }
+
+
 
 
         } else // wrong socket
