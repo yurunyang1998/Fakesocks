@@ -35,7 +35,7 @@ int eventLoop::looprun() {
 
     while(1)
     {
-        int nfds = epoll_wait(this->_epollfd, _events, 20, 500);
+        int nfds = epoll_wait(this->_epollfd, _events, 21, 500);
 //        printf("action 1 , %d \n",nfds);
         for(int i=0;i<nfds;i++)
         {
@@ -45,8 +45,9 @@ int eventLoop::looprun() {
                 SAin clientaddr;
                 socklen_t  len = sizeof(clientaddr);
                 int confd = accept(_listenfd, (SA *)&clientaddr, &len);
-                this->add_fd(confd, EPOLLIN | EPOLLET);
+                this->add_fd(confd, EPOLLIN | EPOLLET );
                 std::shared_ptr<TCPrelayHandler> tcpRelayHandler(new TCPrelayHandler(confd, true, this));
+
                 fdmap.insert(std::pair<int, std::shared_ptr<TCPrelayHandler> >(confd, tcpRelayHandler));
                 int a;
             } else{
@@ -93,5 +94,32 @@ int eventLoop::add_to_fd_map(int confd, TCPrelayHandler *tcprelayHandler) {
         perror("confd has in fdmap");
         return 0;
     }
+}
+
+
+
+int eventLoop::del_fd(int fd) {
+
+    struct epoll_event ev;
+    ev.events = 0;
+    ev.data.fd  = fd;
+    int i = epoll_ctl(this->_epollfd, EPOLL_CTL_DEL, fd, &ev);
+    if(i!=0)
+    {
+        perror("epoll del ");
+        return -1;
+    }
+    return 0;
+}
+
+
+
+
+
+int eventLoop::delFromFdMap(int confd) {
+
+    this->fdmap.erase(confd);
+
+    return 0;
 }
 

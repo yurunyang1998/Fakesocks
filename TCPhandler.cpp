@@ -24,7 +24,7 @@ TCPhandler::TCPhandler(bool is_client, eventLoop * loop) { //TODO:add config fil
         this->_listensock = common::createSocket(AF_INET, SOCK_STREAM, 0);
         int on =1;
         int ret = setsockopt(_listensock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on) );
-        _client = std::shared_ptr<SAin>(common::creatServeraddr("127.0.0.1",1082));
+        _client = std::shared_ptr<SAin>(common::creatServeraddr("127.0.0.1",8889));
         bind(this->_listensock, (SA *)_client.get(), sizeof(SAin));
         listen(_listensock, 1024);
         if(loop)
@@ -45,6 +45,7 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
 
     if(_is_local) {
 
+        //printf("%d fd ",fd);
 
         if (fd == this->_clientfd) {
 
@@ -53,158 +54,150 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
             //TODO:five stages;
             if (this->_stage == STAGE_INIT_0)      // browser shake hand request
             {
+                try{
 
-                int len = recv(fd, data, 4096, 0);
+                    int len = recv(fd, data, 4096, 0);
 
-                fflush(stdout);
-                if (data[0] == 5 && data[1] == 1 && data[2] == 0)   //verify sock5 protocol
-                {
-                    char buf[100];
-                    buf[0] = 0x5;
-                    buf[1] = 0x0;
-                    common::sendData(fd, buf, 2);
-                    this->_stage = STAGE_INIT_1;
-                    return 0;
-                } else {
-                    //close(fd);
-                    return -1;
-                    //TODO: proxy protocol error ,not sock5
+                    fflush(stdout);
+                    if (data[0] == 5 && data[1] == 1 && data[2] == 0)   //verify sock5 protocol
+                    {
+                        char buf[100];
+                        buf[0] = 0x5;
+                        buf[1] = 0x0;
+                        int len =  common::sendData(fd, buf, 2);
+                        if(len == 0)
+                        {
+                            throw errno;
+                        }
+                        this->_stage = STAGE_INIT_1;
+                        return 0;
+                    } else {
+                        destory();
+                        return -1;
+                        //TODO: proxy protocol error ,not sock5
+                    }
                 }
+                catch (int e)
+                {
+                    destory();
+                    perror("STAGE_INIT_0 error ");
+
+                }
+
+
+
             }
             else if (this->_stage == STAGE_INIT_1) {
 
-                char data[4096];
-                memset(data, 0, 4096);
-                int len = common::recvData(fd, data);  // browser send protocol ,ip,and port
+
+                try{
+                    char data[4096];
+                    memset(data, 0, 4096);
+                    int len = common::recvData(fd, data);  // browser send protocol ,ip,and port
 //                sock5result sock5Result;
-                resovlesock5(data, &sock5Result);
-                int result = realyRequest(_remotefd, sock5Result); //TODO: 应该写成异步回调式，非阻塞的
-                if (result == 0) {
-                    unsigned char data[4096];
-                    memset(data, 0, 10);
-                    data[0] = 0x05;
-                    data[1] = 0x00;
-                    data[2] = 0x00;
-                    if (sock5Result.atyp == 3) {
-                        data[3] = 1;
-                    } else if (sock5Result.atyp == 1) {
-                        data[3] = 1;
-                    } else if (sock5Result.atyp == 6) {
-                        data[3] = 4;
+                    resovlesock5(data, &sock5Result);
+                    int result = realyRequest(_remotefd, sock5Result); //TODO: 应该写成异步回调式，非阻塞的
+                    if (result == 0) {
+                        unsigned char data[4096];
+                        memset(data, 0, 10);
+                        data[0] = 0x05;
+                        data[1] = 0x00;
+                        data[2] = 0x00;
+                        if (sock5Result.atyp == 3) {
+                            data[3] = 1;
+                        } else if (sock5Result.atyp == 1) {
+                            data[3] = 1;
+                        } else if (sock5Result.atyp == 6) {
+                            data[3] = 4;
+                        }
+
+                        data[4] = 0;
+                        data[5] = 0;
+                        data[6] = 0;
+                        data[7] = 0;
+                        data[8] = 0;
+                        data[9] = 0;
+                        //data[10] ='\n';
+                        int i = write(fd, data, 10);
+                        if (i <= 0)
+                        {
+                            throw errno;
+                        }
+
+                        _stage = STAGE_RELAYDATA;
+                        return 0;
+
+                    } else { //TODO:can not access to the dst
+
+                        destory();
+                        //perror("STAGE_INIT_1 error ");
+                        return -1;
                     }
-
-//                    SA sockaddr;
-//                    socklen_t sal = sizeof(SA);
-//                    getsockname(fd, &sockaddr, &sal);
-                    data[4] = 0;
-                    data[5] = 0;
-                    data[6] = 0;
-                    data[7] = 0;
-                    data[8] = 0;
-                    data[9] = 0;
-                    //data[10] ='\n';
-                    int i = write(fd, data, 10);
-                    if (i < 0)
-                        perror("write");
-
-                    _stage = STAGE_RELAYDATA;
-                    return 0;
-
-                } else { //TODO:can not access to the dst
-                    //close(fd);
+                }
+                catch (int e)
+                {
+                    destory();
+                    perror("STAGE_INIT_1 error ");
                     return -1;
                 }
 
+
+
             } else if (this->_stage == STAGE_RELAYDATA)  //relay data to remote server
             {
-                memset(data, 0, 4096);
+                try{
+                    memset(data, 0, 4096);
 
-
-                //while(1)
-                {
                     int len = common::recvData(fd, data);
-//                    if(len<=0)
-                //
-
-                    printf("1  %d", len);
-                    for(int i=0;i<len;i++)
-                        printf("%c",data[i]);
-                    printf("\n\n\n\n");
-
-
-
+                    if(len <=0)
+                        throw errno;
                     len = common::sendData(_remotefd, data, len);
-
-
-                    printf("2  %d", len);
-                    for(int i=0;i<len;i++)
-                        printf("%c",data[i]);
-                    printf("\n\n\n\n");
-
-
-
-                    len = common::recvData(_remotefd, data);
-
-
-                    printf("3  %d", len);
-                    for(int i=0;i<len;i++)
-                        printf("%c",data[i]);
-                    printf("\n\n\n\n");
-
-
-
-
-                    len = common::sendData(fd, data,len);
-
-
-                    printf("4  %d", len);
-                    for(int i=0;i<len;i++)
-                        printf("%c",data[i]);
-                    printf("\n\n\n\n");
-
-
-
-
-                    if(len == -1)
-                        perror("send");
-
                 }
-
-
+                catch (int e)
+                {
+                    destory();
+                    perror("STAGE_RELAYDATA error");
+                    return -1;
+                }
             }
 
 
         } else if (fd == this->_remotefd) {
+            try{
+                char data[4096];
+                if(this->_stage == STAGE_RELAYDATA) {
 
-            char data[4096];
-            if(this->_stage == STAGE_RELAYDATA)
-            {
-                printf("STAGE RELAYDATA");
-                fflush(stdout);
-                memset(data, 4096, 0);
-                while(1)
-                {
+                    memset(data, 4096, 0);
                     int len = common::recvData(fd, data);
                     if(len<=0)
-                        break;
-                    len =  common::sendData(_clientfd, data,len);
-                    printf("len :: %d", len);
-                    fflush(stdout);
-                    if(len<=0)
                     {
-                        perror("send");
+                        throw errno;
                     }
-                }
+                    len = common::sendData(_clientfd, data, len);
+
+                 }
+            }catch (int e)
+            {
+                destory();
+                perror("STAGE_RELAYDATA error");
             }
+        }
 
 
 
 
-        } else // wrong socket
+         else // wrong socket
         {
             perror("wrong socket ,not client or remote ");
 
         }
+
+
+    }
+    else{ //server
+
+
+
 
 
     }
@@ -268,6 +261,7 @@ int TCPrelayHandler::realyRequest(int fd, const sock5result &sock5result1) {
         if(sock5result1.atyp == 1 or (sock5result1.dstaddr[1]<='9' and sock5result1.dstaddr[1]>='1')) //ipv4
         {
             _remotefd = common::createSocket(AF_INET, SOCK_STREAM, 0);
+            _loop->add_fd(_remotefd, EPOLLIN| EPOLLET) ;
             _loop->add_to_fd_map(_remotefd, this);
             char * tempip = (char *)sock5result1.dstaddr;
             std::string dstip(++tempip);
@@ -280,7 +274,7 @@ int TCPrelayHandler::realyRequest(int fd, const sock5result &sock5result1) {
             int result = connect(_remotefd,(SA*)serveaddr.get(), sizeof(SA));
             if(result == 0)
             {
-                printf("successful\n");
+               // printf("successful\n");
                 return 0;
             } else
             {
@@ -300,6 +294,40 @@ int TCPrelayHandler::realyRequest(int fd, const sock5result &sock5result1) {
 
     }
 
+
+    return 0;
+}
+
+TCPrelayHandler::~TCPrelayHandler() {
+    if(this->_clientfd != 0)
+    {
+        _loop->del_fd(_clientfd);
+        close(_clientfd);
+        _loop->delFromFdMap(_clientfd);
+    }
+    if(this->_remotefd !=0)
+    {
+        _loop->del_fd(_remotefd);
+        close(_remotefd);
+        _loop->delFromFdMap(_remotefd);
+    }
+
+
+}
+
+int TCPrelayHandler::destory() {
+    if(this->_clientfd != 0)
+    {
+        _loop->del_fd(_clientfd);
+        close(_clientfd);
+        _loop->delFromFdMap(_clientfd);
+    }
+    if(this->_remotefd !=0)
+    {
+        _loop->del_fd(_remotefd);
+        close(_remotefd);
+        _loop->delFromFdMap(_remotefd);
+    }
 
     return 0;
 }

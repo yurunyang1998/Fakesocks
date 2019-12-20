@@ -39,8 +39,8 @@ int common::sendData(int fd,  char *data, int datalen) {
 
 int common::recvData(int fd, char *buf){
 
-    int len = recv(fd, buf, 2048, 0);
-//    for(int i=0;i<len;i++)
-//        printf("%c", buf[i]);
+    int len =0;
+
+    len = recv(fd, buf, 4096, 0);
     return len;
 }

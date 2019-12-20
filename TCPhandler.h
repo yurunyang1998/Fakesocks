@@ -88,7 +88,8 @@ public:
 
         }
     }
-
+    ~TCPrelayHandler();
+    int destory();
     int event_handler(int fd ,uint32_t events);
 };
 

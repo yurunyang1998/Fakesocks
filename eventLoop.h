@@ -29,10 +29,11 @@ private:
 public:
     eventLoop();
     int add_fd(int fd, int state);
+    int del_fd(int fd);
     int looprun();
     int bindListenfd(int listenfd);
     int add_to_fd_map(int confd, TCPrelayHandler * tcPrelayHandler);
-
+    int delFromFdMap(int confd);
 };
 
 
