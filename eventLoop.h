@@ -8,6 +8,7 @@
 #include "commonHeaders.h"
 #include "TCPhandler.h"
 #include "map"
+#include "resolveDNS.h"
 #define  FDSIZE 1024
 
 
@@ -22,12 +23,13 @@ private:
     struct epoll_event _events[MAXEVENTS];
     std::shared_ptr<TCPhandler> _tcphandler;
     int _listenfd;
-    std::map<int ,std::shared_ptr<TCPrelayHandler>> fdmap;
+    std::hashmap<int ,std::shared_ptr<TCPrelayHandler>> fdmap;
 
 
 
 public:
     eventLoop();
+    resolveDNS DNS;
     int add_fd(int fd, int state);
     int del_fd(int fd);
     int looprun();
