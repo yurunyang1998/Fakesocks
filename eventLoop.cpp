@@ -45,7 +45,7 @@ int eventLoop::looprun() {
                 SAin clientaddr;
                 socklen_t  len = sizeof(clientaddr);
                 int confd = accept(_listenfd, (SA *)&clientaddr, &len);
-                this->add_fd(confd, EPOLLIN | EPOLLET );
+                this->add_fd(confd, EPOLLIN );
                 std::shared_ptr<TCPrelayHandler> tcpRelayHandler(new TCPrelayHandler(confd, true, this));
 
                 fdmap.insert(std::pair<int, std::shared_ptr<TCPrelayHandler> >(confd, tcpRelayHandler));
@@ -57,12 +57,31 @@ int eventLoop::looprun() {
 
                 uint32_t event = _events[i].events;
                 auto  iter = fdmap.find(fd);
-                auto temphandler = iter->second;
-                int result = temphandler->event_handler(fd , event);
-                if(result == -1)
+
+
+                printf("\n\n\n\n");
+                for(auto i = fdmap.begin();i!=fdmap.end();i++)
                 {
-                    fdmap.erase(fd);
+                    printf("%d\n", i->first);
                 }
+
+                printf("\n");
+                if(iter != fdmap.end() )
+                {
+
+                    auto temphandler = iter->second;
+                    printf("%x\n", iter->first);
+                    int result = temphandler->event_handler(fd , event);
+
+                } else{
+
+
+                    printf("empty \n");
+                    fflush(stdout);
+                    break;
+
+                }
+
 
 
             }
@@ -104,11 +123,13 @@ int eventLoop::del_fd(int fd) {
     ev.events = 0;
     ev.data.fd  = fd;
     int i = epoll_ctl(this->_epollfd, EPOLL_CTL_DEL, fd, &ev);
-    if(i!=0)
-    {
-        perror("epoll del ");
-        return -1;
-    }
+//    if(i!=0)
+//    {
+//
+//        printf("%d ", fd);
+//        perror("epoll del ");
+//        return -1;
+//    }
     return 0;
 }
 
@@ -118,7 +139,14 @@ int eventLoop::del_fd(int fd) {
 
 int eventLoop::delFromFdMap(int confd) {
 
-    this->fdmap.erase(confd);
+
+    auto iter = fdmap.find(confd);
+    //auto point = iter->second;
+    if(iter != fdmap.end())
+    {
+        fdmap.erase(confd);
+
+    }
 
     return 0;
 }

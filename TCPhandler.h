@@ -63,9 +63,9 @@ class TCPrelayHandler
 {
 private:
 
-    int _clientfd;
+    int _clientfd =0 ;
     bool _is_local;
-    int _remotefd;
+    int _remotefd =0;
     std::shared_ptr<SAin> _clientaddr;
     std::shared_ptr<SAin> _serveraddr;//(new SAin);
     eventLoop * _loop;

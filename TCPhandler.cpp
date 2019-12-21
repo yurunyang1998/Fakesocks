@@ -25,12 +25,12 @@ TCPhandler::TCPhandler(bool is_client, eventLoop * loop) { //TODO:add config fil
         int on =1;
         int ret = setsockopt(_listensock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on) );
         _client = std::shared_ptr<SAin>(common::creatServeraddr("127.0.0.1",8889));
-        bind(this->_listensock, (SA *)_client.get(), sizeof(SAin));
+        bind(this->_listensock, (SA *)&(*_client), sizeof(SAin));
         listen(_listensock, 1024);
         if(loop)
         {
 //            _loop->add_fd(this->_listensock,EPOLLIN|EPOLLET);
-            _loop->add_fd(_listensock, EPOLLIN | EPOLLET);
+            _loop->add_fd(_listensock, EPOLLIN );
             _loop->bindListenfd(this->_listensock);
 
         }
@@ -81,7 +81,7 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
                 {
                     destory();
                     perror("STAGE_INIT_0 error ");
-
+                    return -1;
                 }
 
 
@@ -149,6 +149,10 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
                     memset(data, 0, 4096);
 
                     int len = common::recvData(fd, data);
+//                    if(len == 0 )
+//                    {
+//                        destory();
+//                    }
                     if(len <=0)
                         throw errno;
                     len = common::sendData(_remotefd, data, len);
@@ -156,7 +160,7 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
                 catch (int e)
                 {
                     destory();
-                    perror("STAGE_RELAYDATA error");
+                    //perror("STAGE_RELAYDATA0 error");
                     return -1;
                 }
             }
@@ -179,7 +183,7 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
             }catch (int e)
             {
                 destory();
-                perror("STAGE_RELAYDATA error");
+                //perror("STAGE_RELAYDATA error");
             }
         }
 
@@ -299,19 +303,21 @@ int TCPrelayHandler::realyRequest(int fd, const sock5result &sock5result1) {
 }
 
 TCPrelayHandler::~TCPrelayHandler() {
-    if(this->_clientfd != 0)
-    {
-        _loop->del_fd(_clientfd);
-        close(_clientfd);
-        _loop->delFromFdMap(_clientfd);
-    }
-    if(this->_remotefd !=0)
-    {
-        _loop->del_fd(_remotefd);
-        close(_remotefd);
-        _loop->delFromFdMap(_remotefd);
-    }
-
+//    if(this->_clientfd != 0)
+//    {
+//        _loop->del_fd(_clientfd);
+//        close(_clientfd);
+//        _loop->delFromFdMap(_clientfd);
+//        _clientfd =0;
+//    }
+//    if(this->_remotefd !=0)
+//    {
+//        _loop->del_fd(_remotefd);
+//        close(_remotefd);
+//        _loop->delFromFdMap(_remotefd);
+//        _remotefd = 0;
+//    }
+    destory();
 
 }
 
@@ -321,12 +327,14 @@ int TCPrelayHandler::destory() {
         _loop->del_fd(_clientfd);
         close(_clientfd);
         _loop->delFromFdMap(_clientfd);
+        _clientfd = 0;
     }
     if(this->_remotefd !=0)
     {
         _loop->del_fd(_remotefd);
         close(_remotefd);
-        _loop->delFromFdMap(_remotefd);
+        //_loop->delFromFdMap(_remotefd);
+        _remotefd = 0;
     }
 
     return 0;
