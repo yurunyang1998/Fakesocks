@@ -3,4 +3,3 @@ set(lib_src
 )
 
 add_library(encrypt STATIC ${lib_src})
-
