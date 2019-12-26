@@ -265,7 +265,7 @@ int TCPrelayHandler::realyRequest(int fd, const sock5result &sock5result1) {
         if(sock5result1.atyp == 1 or (sock5result1.dstaddr[1]<='9' and sock5result1.dstaddr[1]>='1')) //ipv4
         {
             _remotefd = common::createSocket(AF_INET, SOCK_STREAM, 0);
-            _loop->add_fd(_remotefd, EPOLLIN| EPOLLET) ;
+            _loop->add_fd(_remotefd, EPOLLIN ) ;
             _loop->add_to_fd_map(_remotefd, this);
             char * tempip = (char *)sock5result1.dstaddr;
             std::string dstip(++tempip);
@@ -326,7 +326,7 @@ int TCPrelayHandler::destory() {
     {
         _loop->del_fd(_clientfd);
         close(_clientfd);
-        _loop->delFromFdMap(_clientfd);
+        //_loop->delFromFdMap(_clientfd);
         _clientfd = 0;
     }
     if(this->_remotefd !=0)
