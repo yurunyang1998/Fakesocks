@@ -1,4 +1,5 @@
 // Copyright [2019] <Copyright R.X.Cao>
+#include <algorithm>
 
 #include "big_number.h"  // NOLINT
 
@@ -61,9 +62,59 @@ bool BigNum::operator==(const BigNum &num) {
   return false;
 }
 
-BigNum BigNum::operator+(const BigNum &num) {
+BigNum& BigNum::operator+(const BigNum &num) {
   if (this->is_negetive_ ^ num.is_negetive_) {
     return *this - num;
+  }
+
+  if (data_.size() >= num.data_.size()) {
+    uint32_t gap = data_.size() - num.data_.size();
+
+    for (uint32_t i = gap; i < data_.size(); i++) {
+      data_[i] += _number(num.data_[i - gap]);
+    }
+  } else {
+    uint32_t gap = num.data_.size() - data_.size();
+    data_.resize(num.data_.size());
+
+    uint32_t i = num.data_.size() - 1;
+    for ( ; i >= data_.size() - 1 - gap; i--) {
+      data_[i] = _charactor(_number(data_[i - gap]) + _number(num.data_[i]));
+    }
+
+    while (i > 0) {
+      data_[i] = num.data_[i];
+      i--;
+    }
+  }
+
+  if (_number(data_[0]) > 9) {
+    uint32_t len = data_.size();
+    data_.resize(len + 1);
+  }
+  BitCarry();
+
+  return *this;
+}
+
+BigNum& BigNum::operator-(const BigNum &num) {
+  return *this;
+}
+
+BigNum& BigNum::operator*(const BigNum &num) {
+  return *this;
+}
+
+BigNum& BigNum::operator/(const BigNum &num) {
+  return *this;
+}
+
+void BigNum::BitCarry() {
+  for (uint32_t i = data_.size() - 1; i > 1; i--) {
+    if (_number(data_[i]) > 9) {
+      data_[i] = _charactor(_number(data_[i]) / 10);
+      data_[i - 1] = _charactor(_number(data_[i - 1]) + 1);
+    }
   }
 }
 
@@ -85,6 +136,15 @@ bool BigNum::CompareGreatPerChar(const std::vector<char> &num) {
   }
 
   return true;
+}
+
+std::string BigNum::toString() {
+  std::string result;
+  for (auto &i : data_) {
+    result.push_back(i);
+  }
+
+  return result;
 }
 
 }  // namespace bignum

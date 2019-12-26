@@ -21,16 +21,18 @@ class BigNum {
  public:
   explicit BigNum(const std::string &num);
   ~BigNum();
-  BigNum operator+(const BigNum &num);
-  BigNum operator-(const BigNum &num);
-  BigNum operator*(const BigNum &num);
-  BigNum operator/(const BigNum &num);
+  BigNum& operator+(const BigNum &num);
+  BigNum& operator-(const BigNum &num);
+  BigNum& operator*(const BigNum &num);
+  BigNum& operator/(const BigNum &num);
   bool operator<(const BigNum &num);
   bool operator>(const BigNum &num);
   bool operator==(const BigNum &num);
+  std::string toString();
 
  private:
   bool IsVaild();
+  void BitCarry();
   // NOTE: Only useable for data's length whitch are equal.
   bool CompareGreatPerChar(const std::vector<char> &num);
 
