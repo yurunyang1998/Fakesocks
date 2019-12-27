@@ -288,6 +288,18 @@ int TCPrelayHandler::realyRequest(int fd, const sock5result &sock5result1) {
         }
         else if(sock5result1.atyp==3)  //domain
         {
+            char * tempip = (char * )sock5result1.dstaddr;
+            int urllen = tempip[0];
+            tempip++;
+            std::string dsturl(tempip, 0,urllen);
+            std::string dstip = _loop->DNS.url2Ip(dsturl);
+            
+
+
+
+
+
+
 
         } else if(sock5result1.atyp == 6) //ipv6
         {
