@@ -65,10 +65,10 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
                         buf[0] = 0x5;
                         buf[1] = 0x0;
                         int len =  common::sendData(fd, buf, 2);
-                        if(len == 0)
-                        {
-                            throw errno;
-                        }
+//                        if(len == 0)
+//                        {
+//                            throw errno;
+//                        }
                         this->_stage = STAGE_INIT_1;
                         return 0;
                     } else {
@@ -119,10 +119,10 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
                         data[9] = 0;
                         //data[10] ='\n';
                         int i = write(fd, data, 10);
-                        if (i <= 0)
-                        {
-                            throw errno;
-                        }
+//                        if (i <= 0)
+//                        {
+//                            throw errno;
+//                        }
 
                         _stage = STAGE_RELAYDATA;
                         return 0;
@@ -149,13 +149,16 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
                     memset(data, 0, 4096);
 
                     int len = common::recvData(fd, data);
-//                    if(len == 0 )
-//                    {
+                    if(len == 0 )
+                    {
+                        return 0;
 //                        destory();
-//                    }
-                    if(len <=0)
+                    }
+                    if(len <0)
                         throw errno;
-                    len = common::sendData(_remotefd, data, len);
+                    else
+                        len = common::sendData(_remotefd, data, len);
+                    return 0;
                 }
                 catch (int e)
                 {
@@ -173,17 +176,21 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
 
                     memset(data, 4096, 0);
                     int len = common::recvData(fd, data);
-                    if(len<=0)
+                    if(len== 0)
+                        return 0;
+                    if(len<0)
                     {
                         throw errno;
                     }
-                    len = common::sendData(_clientfd, data, len);
-
+                    else
+                        len = common::sendData(_clientfd, data, len);
+                    //return 0;
                  }
             }catch (int e)
             {
                 destory();
                 //perror("STAGE_RELAYDATA error");
+                return 0;
             }
         }
 
@@ -334,20 +341,20 @@ TCPrelayHandler::~TCPrelayHandler() {
 }
 
 int TCPrelayHandler::destory() {
-    if(this->_clientfd != 0)
-    {
-        _loop->del_fd(_clientfd);
-        close(_clientfd);
-        //_loop->delFromFdMap(_clientfd);
-        _clientfd = 0;
-    }
-    if(this->_remotefd !=0)
-    {
-        _loop->del_fd(_remotefd);
-        close(_remotefd);
-        //_loop->delFromFdMap(_remotefd);
-        _remotefd = 0;
-    }
+//    if(this->_clientfd != 0)
+//    {
+//        _loop->del_fd(_clientfd);
+//        close(_clientfd);
+//        //_loop->delFromFdMap(_clientfd);
+//        _clientfd = 0;
+//    }
+//    if(this->_remotefd !=0)
+//    {
+//        _loop->del_fd(_remotefd);
+//        close(_remotefd);
+//        //_loop->delFromFdMap(_remotefd);
+//        _remotefd = 0;
+//    }
 
     return 0;
 }

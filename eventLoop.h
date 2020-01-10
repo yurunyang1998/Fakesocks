@@ -23,7 +23,7 @@ private:
     struct epoll_event _events[MAXEVENTS];
     std::shared_ptr<TCPhandler> _tcphandler;
     int _listenfd;
-    std::hashmap<int ,std::shared_ptr<TCPrelayHandler>> fdmap;
+    std::map<int ,std::shared_ptr<TCPrelayHandler>> fdmap;
 
 
 

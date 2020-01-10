@@ -81,7 +81,6 @@ public:
 
             this->_clientfd = confd;
             _is_local = is_local;
-//            loop->add_fd(confd,EPOLLIN | EPOLLET);
             this->_loop = loop;
             _stage = STAGE_INIT_0;
 

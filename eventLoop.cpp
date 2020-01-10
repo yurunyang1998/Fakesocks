@@ -45,7 +45,7 @@ int eventLoop::looprun() {
                 SAin clientaddr;
                 socklen_t  len = sizeof(clientaddr);
                 int confd = accept(_listenfd, (SA *)&clientaddr, &len);
-                this->add_fd(confd, EPOLLIN );
+                this->add_fd(confd, EPOLLIN  | EPOLLET);
                 std::shared_ptr<TCPrelayHandler> tcpRelayHandler(new TCPrelayHandler(confd, true, this));
 
                 fdmap.insert(std::pair<int, std::shared_ptr<TCPrelayHandler> >(confd, tcpRelayHandler));
@@ -59,18 +59,18 @@ int eventLoop::looprun() {
                 auto  iter = fdmap.find(fd);
 
 
-                printf("\n\n\n\n");
-                for(auto i = fdmap.begin();i!=fdmap.end();i++)
-                {
-                    printf("%d\n", i->first);
-                }
-
-                printf("\n");
+//                printf("\n\n\n\n");
+//                for(auto i = fdmap.begin();i!=fdmap.end();i++)
+//                {
+//                    printf("%d\n", i->first);
+//                }
+//
+//                printf("\n");
                 if(iter != fdmap.end() )
                 {
 
                     auto temphandler = iter->second;
-                    printf("%x\n", iter->first);
+                    //printf("%x\n", iter->first);
                     int result = temphandler->event_handler(fd , event);
 
                 } else{
