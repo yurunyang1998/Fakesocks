@@ -143,11 +143,15 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
                     int len = common::recvData(fd, data);
                     printf("recvdata  %d from local\n", len);
                     if (len == 0) {
-                        return 0;
+                        close(fd);
+                        _loop->del_fd(fd);
 //                        destory();
                     }
                     if (len < 0)
-                        throw errno;
+                    {
+                        perror("error");
+
+                    }
                     else {
                         len = common::sendData(_remotefd, data, len);
                         printf("senddata  %d to remote\n", len);
@@ -171,7 +175,11 @@ int TCPrelayHandler::event_handler(int fd ,uint32_t events) {
                 int len = common::recvData(fd, data);
                 printf("recv 　%d data from remote　\n", len);
                 if (len == 0)
+                {
+                    close(fd);
+                    _loop->del_fd(fd);
                     return 0;
+                }
                 if (len < 0) {
                     perror("recvfromremote");
                 } else {
