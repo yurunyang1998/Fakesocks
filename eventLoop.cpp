@@ -39,13 +39,23 @@ int eventLoop::looprun() {
 //        printf("action 1 , %d \n",nfds);
         for(int i=0;i<nfds;i++)
         {
+            if (_events[i].events & EPOLLERR)
+            {
+                printf("%d exit\n", _events[i].data.fd);
+                this->del_fd(_events[i].data.fd);
+                close(_events[i].data.fd);
+                //mapdata.erase(evs[i].data.fd);
+            }
+
+
+
             if(_events[i].data.fd==_listenfd)
             {
 //                printf("get listen request  \n");
                 SAin clientaddr;
                 socklen_t  len = sizeof(clientaddr);
                 int confd = accept(_listenfd, (SA *)&clientaddr, &len);
-                this->add_fd(confd, EPOLLIN  | EPOLLET);
+                this->add_fd(confd, EPOLLIN  );
                 std::shared_ptr<TCPrelayHandler> tcpRelayHandler(new TCPrelayHandler(confd, true, this));
 
                 fdmap.insert(std::pair<int, std::shared_ptr<TCPrelayHandler> >(confd, tcpRelayHandler));
