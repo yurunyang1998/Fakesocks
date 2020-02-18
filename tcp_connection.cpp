@@ -14,7 +14,7 @@ void tcp_connection::handle_read(const boost::system::error_code &ec ,size_t siz
     if(!ec)
     {
         printf("recv: ");
-        for(int i=0;i<size;i++)
+        for(int i=0;i<20;i++)
             printf("%c ",data_[i]);
         printf("\n");
 
@@ -36,15 +36,14 @@ void tcp_connection::handle_read(const boost::system::error_code &ec ,size_t siz
             resolvesock5(data_,sock5result_.get());
             sock5respone(data_);
             doWrite(localsocket_);
-//            do_connect(endpoints);
-            //this->stag == SOCKCONNECTED;
+
 
         }
         else if(this->stag == SOCKCONNECTED)
         {
             printf("SOCKCOONECTED  ");
             doWrite(localsocket_);
-            do_connect(endpoints);
+            //do_connect(endpoints);
         }
 
         doRead(localsocket_);
@@ -95,7 +94,7 @@ void tcp_connection::doRead(tcp::socket &socket_) {
 
 void tcp_connection::doWrite(tcp::socket &socket_) {
 
-    socket_.async_write_some(boost::asio::buffer(data_,11),
+    socket_.async_write_some(boost::asio::buffer(data_,10),
                                  boost::bind(&tcp_connection::handle_write, shared_from_this(),
                                              boost::asio::placeholders::error  ,
                                              boost::asio::placeholders::bytes_transferred ));
@@ -103,39 +102,47 @@ void tcp_connection::doWrite(tcp::socket &socket_) {
 
 }
 
-void tcp_connection::sock5respone(char *data_) {
+void tcp_connection::sock5respone(unsigned char  *data_) {
 
     if(this->stag == SOCKWAITREQUEST)
     {
         data_[0]=0x05;
         data_[1]=0x00;
+        data_[2]='\0';
     } else if(this->stag == SOCKCONNECTING)
     {
-        memset(data_, 0,10);
-        data_[0] = 0x05;
-        data_[1] = 0x00;
-        data_[2] = 0x00;
-        if (sock5result_->atyp == 3) {
-            data_[3] = 3;
-        } else if (sock5result_->atyp == 1) {
-            data_[3] = 1;
-        } else if (sock5result_->atyp == 6) {
-            data_[3] = 4;
-        }
+        memset(data_, 0,100);
+        data_ = 
+//        data_[0] = 0x05;
+//        data_[1] = 0x00;
+//        data_[2] = 0x00;
+//        if (sock5result_->atyp == 3) {
+//            data_[3] = 0x00;
+//        } else if (sock5result_->atyp == 1) {
+//            data_[3] = 0x00;
+//        } else if (sock5result_->atyp == 6) {
+//            data_[3] = 0x00;
+//        }
+//
+//        data_[4] = 0x00;
+//        data_[5] = 0x00;
+//        data_[6] = 0x00;
+//        data_[7] = 0x00;
+//        data_[8] = 0x00;
+//        data_[9] = 0x00;
+//        data_[10] = '\0';
+        printf("data :");
+        for(int i=0;i<10;i++)
+            printf("%d",data_[i]);
+        printf("\n");
 
-        data_[4] = 0;
-        data_[5] = 0;
-        data_[6] = 0;
-        data_[7] = 0;
-        data_[8] = 0;
-        data_[9] = 0;
-        data_[10] = '\n';
     }
-        return;
+
+    return;
 }
 
 
-void tcp_connection::resolvesock5(char *data_, sock5result *sock5Result) {
+void tcp_connection::resolvesock5(unsigned char *data_, sock5result *sock5Result) {
     if (sock5Result != nullptr and data_ != nullptr) {
         sock5Result->version = data_[0];
         sock5Result->cmd = data_[1];

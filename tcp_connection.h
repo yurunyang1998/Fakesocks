@@ -74,7 +74,7 @@ private:
             : localsocket_(io_context),serversocket_(io_context),sock5result_(new sock5result){
 
         tcp::resolver resolver(io_context);
-        endpoints = resolver.resolve("127.0.0.1","1080");
+        endpoints = resolver.resolve("127.0.0.1","9999");
     }
 
 
@@ -86,8 +86,8 @@ private:
 
     void handle_connect(const boost::system::error_code& /*error*/);
 
-    void sock5respone(char * data_);
-    void resolvesock5(char * data, sock5result * sock5Result );
+    void sock5respone(unsigned char * data_);
+    void resolvesock5(unsigned char * data, sock5result * sock5Result );
 
     tcp::socket localsocket_;
     tcp::socket serversocket_;
@@ -95,7 +95,7 @@ private:
 
     enum {max_length = 4096};
     tcp::resolver::results_type endpoints;
-    char data_[max_length];
+    unsigned char data_[max_length];
     std::shared_ptr<sock5result> sock5result_;
     int stag = SOCKWAITREQUEST ;
 };
