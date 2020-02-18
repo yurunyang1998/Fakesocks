@@ -5,6 +5,6 @@ set(CMAKE_CXX_STANDARD 11)
 
 add_subdirectory(lib)
 
-set(SOURCE_FILES main.cpp resolveDNS.cpp resolveDNS.h common.cpp common.h TCPhandler.cpp TCPhandler.h commonHeaders.h eventLoop.cpp eventLoop.h manager.cpp)
+set(SOURCE_FILES main.cpp tcp_server.cpp tcp_server.h tcp_connection.cpp tcp_connection.h)
 add_executable(fakesocks ${SOURCE_FILES})
-target_link_libraries(fakesocks encrypt)
+target_link_libraries(fakesocks encrypt pthread)
