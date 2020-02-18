@@ -111,26 +111,29 @@ void tcp_connection::sock5respone(unsigned char  *data_) {
         data_[2]='\0';
     } else if(this->stag == SOCKCONNECTING)
     {
+
+        //TODO: 这里问题，下面这个数据是sock5 协议协商的最后阶段，代理服务器给浏览器发响应，这个数据是发出去了，但是浏览器收到以后马上就rst了，不知道怎么回事，
+        //TODO: 我抓包分析了 shadowsocks 和这个的流量，看不出什么不一样，对了，当listen端口为1080时， wireshark会自动识别为sock请求
+
         memset(data_, 0,100);
-        data_ = 
-//        data_[0] = 0x05;
-//        data_[1] = 0x00;
-//        data_[2] = 0x00;
-//        if (sock5result_->atyp == 3) {
-//            data_[3] = 0x00;
-//        } else if (sock5result_->atyp == 1) {
-//            data_[3] = 0x00;
-//        } else if (sock5result_->atyp == 6) {
-//            data_[3] = 0x00;
-//        }
-//
-//        data_[4] = 0x00;
-//        data_[5] = 0x00;
-//        data_[6] = 0x00;
-//        data_[7] = 0x00;
-//        data_[8] = 0x00;
-//        data_[9] = 0x00;
-//        data_[10] = '\0';
+        data_[0] = 0x05;
+        data_[1] = 0x00;
+        data_[2] = 0x00;
+        if (sock5result_->atyp == 3) {
+            data_[3] = 1;
+        } else if (sock5result_->atyp == 1) {
+            data_[3] = 1;
+        } else if (sock5result_->atyp == 6) {
+            data_[3] = 4;
+        }
+
+        data_[4] = 0x00;
+        data_[5] = 0x00;
+        data_[6] = 0x00;
+        data_[7] = 0x00;
+        data_[8] = 0x00;
+        data_[9] = 0x00;
+        data_[10] = '\0';
         printf("data :");
         for(int i=0;i<10;i++)
             printf("%d",data_[i]);
