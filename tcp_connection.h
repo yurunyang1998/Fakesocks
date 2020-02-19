@@ -11,11 +11,12 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
 //#include "tcp_server.h"
-
 #define SOCKWAITREQUEST 0
 #define SOCKCONNECTING 1
-#define SOCKCONNECTED 2
-#define SOCKTRANS 3
+#define RELAY2SERVER 2
+#define RELAY2SERVER 3
+#define READFROMSERVER 4
+
 
 using boost::asio::ip::tcp;
 
@@ -65,7 +66,7 @@ public:
     void doRead(tcp::socket &);
 
 
-    void doWrite(tcp::socket &);
+    void doWrite(tcp::socket &, int length);
 
     void do_connect( tcp::resolver::results_type endpoints);
 
@@ -74,7 +75,7 @@ private:
             : localsocket_(io_context),serversocket_(io_context),sock5result_(new sock5result){
 
         tcp::resolver resolver(io_context);
-        endpoints = resolver.resolve("127.0.0.1","9999");
+        endpoints = resolver.resolve("47.100.238.124","8080");
     }
 
 

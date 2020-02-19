@@ -3,50 +3,131 @@
 //
 
 #include <iostream>
+#include <execinfo.h>
 #include "tcp_connection.h"
 #define SOCKWAITREQUEST 0
 #define SOCKCONNECTING 1
-#define SOCKCONNECTED 2
-#define SOCKTRANS 3
+#define RELAY2SERVER 2
+#define RELAY2SERVER 3
+#define READFROMSERVER 4
+
+#define debug
+
+
+void backtrace(void)
+
+{
+
+    int j, nptrs;
+
+#define SIZE 100
+
+    void *buffer[100];
+
+    char **strings;
+
+    nptrs = backtrace(buffer, SIZE);
+
+    printf("backtrace() returned %d addresses\n", nptrs);
+
+    /* The call backtrace_symbols_fd(buffer, nptrs, STDOUT_FILENO)
+
+     *  would produce similar output to the following: */
+
+
+
+    strings = backtrace_symbols(buffer, nptrs);
+
+    if (strings == NULL) {
+
+        perror("backtrace_symbols");
+
+        exit(EXIT_FAILURE);
+
+    }
+
+
+
+    for (j = 0; j < nptrs; j++)
+
+        printf("%s\n", strings[j]);
+
+
+    printf("\n\\n\n\n\n");
+    free(strings);
+
+}
+
+
+
+
+
+
 
 void tcp_connection::handle_read(const boost::system::error_code &ec ,size_t size ){
 
     if(!ec)
     {
-        printf("recv: ");
-        for(int i=0;i<20;i++)
-            printf("%c ",data_[i]);
-        printf("\n");
 
+#ifdef  debug
+//        switch (stag)
+//        {
+//            case 0:{
+//                printf("SOCKWAITREQUEST ");
+//                break;
+//            }
+//            case 1:{
+//                printf("SOCKCONNECTING ");
+//                break;
+//            }
+//            case 2:{
+//                printf("READFROMSERVER ");
+//                break;
+//            }
+//            case 3:{
+//                printf("");
+//                break;
+//            }
+//
+//        }
+
+        if(stag == RELAY2SERVER or READFROMSERVER) {
+
+            printf("recv: ");
+            for (int i = 0; i < size; i++)
+                printf("%c", data_[i]);
+        };
+#endif
+        int length = 0;
         if(this->stag == SOCKWAITREQUEST)
         {
             if(data_[0] == 5 && data_[1]==1 && data_[2] ==0)
             {
-
                 sock5respone(data_);
-                doWrite(localsocket_);
-                //stag = SOCKCONNECTING;
-            } else{
+                length = 2;
+                doWrite(localsocket_,length);
+
+            }
+            else{
                     localsocket_.close();
                 return;
             }
         } else if(this->stag == SOCKCONNECTING)
         {
-            printf("SOCKCONNECTING  ");
             resolvesock5(data_,sock5result_.get());
+            do_connect(endpoints);
             sock5respone(data_);
-            doWrite(localsocket_);
-
+            length = 10;
+            doWrite(localsocket_,length);
 
         }
-        else if(this->stag == SOCKCONNECTED)
+        else if(this->stag == RELAY2SERVER)
         {
-            printf("SOCKCOONECTED  ");
-            doWrite(localsocket_);
-            //do_connect(endpoints);
-        }
+            doWrite(serversocket_,size);
 
-        doRead(localsocket_);
+        } else if (this->stag == READFROMSERVER){
+            doWrite(localsocket_,size);
+        }
 
 
 
@@ -61,9 +142,34 @@ void tcp_connection::handle_write(const boost::system::error_code &ec ,size_t  s
 {
     if(!ec)
     {
-        printf("send: ");
-        for(int i=0;i<20;i++)
-            printf("%d",data_[i]);
+//
+//        switch (stag)
+//        {
+//            case 0:{
+//                printf("SOCKWAITREQUEST ");
+//                break;
+//            }
+//            case 1:{
+//                printf("SOCKCONNECTING ");
+//                break;
+//            }
+//            case 2:{
+//                printf("RELAY2SERVER ");
+//                break;
+//            }
+//            case 3:{
+//                printf("SOCKTRANS ");
+//                break;
+//            }
+//
+//        }
+
+        if(stag == RELAY2SERVER or READFROMSERVER) {
+
+            printf("send: ");
+            for (int i = 0; i < size; i++)
+                printf("%c", data_[i]);
+        }
         printf("\n");
         if(this->stag == SOCKWAITREQUEST){
 
@@ -71,33 +177,45 @@ void tcp_connection::handle_write(const boost::system::error_code &ec ,size_t  s
 
         } else if (this->stag == SOCKCONNECTING){
 
-            this->stag = SOCKCONNECTED;
+            this->stag = RELAY2SERVER;
 
-        } else if (this->stag == SOCKCONNECTED){
+        } else if (this->stag == RELAY2SERVER){
 
-            this->stag = SOCKTRANS;
+            doRead(serversocket_);
+            this->stag = READFROMSERVER;
+            return;
+
+        } else if (this->stag == READFROMSERVER)
+        {
+            this->stag = RELAY2SERVER;
         }
 
+    } else{
+        std::cout<<ec.message()<<std::endl;
     }
 
+//    backtrace();
+    doRead(localsocket_);
 }
 
 void tcp_connection::doRead(tcp::socket &socket_) {
 
-    socket_.async_read_some(boost::asio::buffer(data_, max_length),
-                                 boost::bind(&tcp_connection::handle_read, shared_from_this(),
-                                             boost::asio::placeholders::error  ,
-                                             boost::asio::placeholders::bytes_transferred ));
 
+    socket_.async_read_some(boost::asio::buffer(data_, max_length),
+                            boost::bind(&tcp_connection::handle_read, shared_from_this(),
+                                        boost::asio::placeholders::error  ,
+                                        boost::asio::placeholders::bytes_transferred ));
 
 }
 
-void tcp_connection::doWrite(tcp::socket &socket_) {
 
-    socket_.async_write_some(boost::asio::buffer(data_,10),
-                                 boost::bind(&tcp_connection::handle_write, shared_from_this(),
-                                             boost::asio::placeholders::error  ,
-                                             boost::asio::placeholders::bytes_transferred ));
+void tcp_connection::doWrite(tcp::socket &socket_, int length) {
+
+
+    socket_.async_write_some(boost::asio::buffer(data_,length),
+                             boost::bind(&tcp_connection::handle_write, shared_from_this(),
+                                         boost::asio::placeholders::error  ,
+                                         boost::asio::placeholders::bytes_transferred ));
 
 
 }
@@ -106,38 +224,25 @@ void tcp_connection::sock5respone(unsigned char  *data_) {
 
     if(this->stag == SOCKWAITREQUEST)
     {
+        bzero(data_, sizeof(data_));
         data_[0]=0x05;
         data_[1]=0x00;
         data_[2]='\0';
     } else if(this->stag == SOCKCONNECTING)
     {
 
-        //TODO: 这里问题，下面这个数据是sock5 协议协商的最后阶段，代理服务器给浏览器发响应，这个数据是发出去了，但是浏览器收到以后马上就rst了，不知道怎么回事，
-        //TODO: 我抓包分析了 shadowsocks 和这个的流量，看不出什么不一样，对了，当listen端口为1080时， wireshark会自动识别为sock请求
+        //TODO: (fixed) 这里问题，下面这个数据是sock5 协议协商的最后阶段，代理服务器给浏览器发响应，这个数据是发出去了，但是浏览器收到以后马上就rst了，不知道怎么回事，
+        //TODO: (fixed) 我抓包分析了 shadowsocks 和这个的流量，看不出什么不一样，对了，当listen端口为1080时， wireshark会自动识别为sock请求
 
-        memset(data_, 0,100);
+        bzero(data_, sizeof(data_));
         data_[0] = 0x05;
-        data_[1] = 0x00;
-        data_[2] = 0x00;
         if (sock5result_->atyp == 3) {
-            data_[3] = 1;
+            data_[3] = 3;
         } else if (sock5result_->atyp == 1) {
             data_[3] = 1;
         } else if (sock5result_->atyp == 6) {
             data_[3] = 4;
         }
-
-        data_[4] = 0x00;
-        data_[5] = 0x00;
-        data_[6] = 0x00;
-        data_[7] = 0x00;
-        data_[8] = 0x00;
-        data_[9] = 0x00;
-        data_[10] = '\0';
-        printf("data :");
-        for(int i=0;i<10;i++)
-            printf("%d",data_[i]);
-        printf("\n");
 
     }
 
@@ -199,10 +304,10 @@ void tcp_connection::do_connect(tcp::resolver::results_type endpoints) {
                                    {
                                        if (!ec)
                                        {
-                                           printf("connect");
+                                           printf("connect\n");
 //                                           do_read_header();
                                        } else
-                                           printf("can't connect");
+                                           printf("can't connect\n");
                                    });
     }
 

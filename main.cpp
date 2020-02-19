@@ -7,6 +7,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
+#include <execinfo.h>
 #include "tcp_connection.h"
 #include "tcp_server.h"
 using boost::asio::ip::tcp;
