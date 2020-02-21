@@ -1,0 +1,40 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/yurunyang/Desktop/Fakesocks/lib/big_number.cc
+algorithm
+-
+big_number.h
+/home/yurunyang/Desktop/Fakesocks/lib/big_number.h
+
+/home/yurunyang/Desktop/Fakesocks/lib/big_number.h
+cstdint
+-
+vector
+-
+string
+-
+
+/home/yurunyang/Desktop/Fakesocks/lib/encrypt.cc
+fstream
+-
+cmath
+-
+encrypt.h
+/home/yurunyang/Desktop/Fakesocks/lib/encrypt.h
+iostream
+-
+
+/home/yurunyang/Desktop/Fakesocks/lib/encrypt.h
+cstdint
+-
+random
+-
+vector
+-
+
