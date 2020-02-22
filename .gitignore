@@ -1,0 +1,8 @@
+./idea/
+cmake-build-debug/
+# cmake build file
+build/*
+
+# cpp obj file
+*.o
+*.out

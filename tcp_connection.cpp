@@ -8,6 +8,7 @@
 #define SOCKWAITREQUEST 0
 #define SOCKCONNECTING 1
 #define RELAY2SERVER 2
+
 #define READFROMSERVER 3
 
 #define debug
@@ -70,8 +71,8 @@ void tcp_connection::handle_read(const boost::system::error_code &ec ,size_t siz
 
 #ifdef  debug
 
-
         if(0){//stag ==  READFROMSERVER) {
+
 
             printf("recv: ");
             for (int i = 0; i < size; i++)
@@ -99,6 +100,7 @@ void tcp_connection::handle_read(const boost::system::error_code &ec ,size_t siz
             sock5respone(data_);
             length = 10;
             doWrite(localsocket_,length);
+
         }
         else if(this->stag == RELAY2SERVER)
         {
@@ -127,6 +129,7 @@ void tcp_connection::handle_read(const boost::system::error_code &ec ,size_t siz
     } else{
 
         std::cout<<ec.message()<<std::endl;
+
     }
 
 
@@ -140,11 +143,13 @@ void tcp_connection::handle_write(const boost::system::error_code &ec ,size_t  s
     {
 
 
+
         if(stag == READFROMSERVER ) {
 
 //            printf("send: ");
 //            for (int i = 0; i < size; i++)
 //                printf("%c", data_[i]);
+
         }
         printf("\n");
         if(this->stag == SOCKWAITREQUEST){
@@ -154,6 +159,7 @@ void tcp_connection::handle_write(const boost::system::error_code &ec ,size_t  s
         } else if (this->stag == SOCKCONNECTING){
 
             this->stag = RELAY2SERVER;
+
 
 
         } else if (this->stag == RELAY2SERVER){
@@ -184,9 +190,11 @@ void tcp_connection::handle_write(const boost::system::error_code &ec ,size_t  s
 
 //    backtrace();
 
+
 }
 
 void tcp_connection::doRead(tcp::socket &socket_) {
+
 
     socket_.async_read_some(boost::asio::buffer(data_, max_length),
                             boost::bind(&tcp_connection::handle_read, shared_from_this(),
@@ -198,8 +206,10 @@ void tcp_connection::doRead(tcp::socket &socket_) {
 
 void tcp_connection::doWrite(tcp::socket &socket_, int length) {
 
+
 //    if
 //        std::cout<<"size:"<<length<<std::endl;
+
     socket_.async_write_some(boost::asio::buffer(data_,length),
                              boost::bind(&tcp_connection::handle_write, shared_from_this(),
                                          boost::asio::placeholders::error  ,
@@ -295,6 +305,7 @@ void tcp_connection::do_connect(tcp::resolver::results_type endpoints) {
                                            printf("connect\n");
 //                                           do_read_header();
                                        } else
+
                                        {
                                            printf("can't connect\n");
                                            data_[0]=2;

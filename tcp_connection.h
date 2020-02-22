@@ -14,6 +14,7 @@
 #define SOCKWAITREQUEST 0
 #define SOCKCONNECTING 1
 #define RELAY2SERVER 2
+
 #define READFROMSERVER 3
 
 
@@ -74,7 +75,9 @@ private:
             : localsocket_(io_context),serversocket_(io_context),sock5result_(new sock5result){
 
         tcp::resolver resolver(io_context);
+
         endpoints = resolver.resolve("47.100.238.124","18203");
+
     }
 
 
