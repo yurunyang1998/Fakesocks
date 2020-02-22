@@ -8,8 +8,8 @@
 #define SOCKWAITREQUEST 0
 #define SOCKCONNECTING 1
 #define RELAY2SERVER 2
-#define RELAY2SERVER 3
-#define READFROMSERVER 4
+
+#define READFROMSERVER 3
 
 #define debug
 
@@ -70,28 +70,9 @@ void tcp_connection::handle_read(const boost::system::error_code &ec ,size_t siz
     {
 
 #ifdef  debug
-//        switch (stag)
-//        {
-//            case 0:{
-//                printf("SOCKWAITREQUEST ");
-//                break;
-//            }
-//            case 1:{
-//                printf("SOCKCONNECTING ");
-//                break;
-//            }
-//            case 2:{
-//                printf("READFROMSERVER ");
-//                break;
-//            }
-//            case 3:{
-//                printf("");
-//                break;
-//            }
-//
-//        }
 
-        if(stag == RELAY2SERVER or READFROMSERVER) {
+        if(0){//stag ==  READFROMSERVER) {
+
 
             printf("recv: ");
             for (int i = 0; i < size; i++)
@@ -123,13 +104,31 @@ void tcp_connection::handle_read(const boost::system::error_code &ec ,size_t siz
         }
         else if(this->stag == RELAY2SERVER)
         {
+            //std::cout<<"RELAY2SERVER"<<std::endl;
+//            doWrite(localsocket_,size);
+//            memset(data_,0,max_length);
+
+
             doWrite(serversocket_,size);
 
         } else if (this->stag == READFROMSERVER){
-            doWrite(localsocket_,size);
+
+            if(localsocket_.is_open()) {
+                //std::cout<<"write to local"<<std::endl;
+                //TODO:见鬼了，这里明明有数据，也没报错，就是写不回浏览器
+//                for(int i=0;i<size;i++)
+//                    std::cout<<data_[i];
+                doWrite(localsocket_, size);
+                std::cout<<std::endl;
+            }
+            else
+                std::cout<<"localsocket closed"<<std::endl;
         }
 
 
+    } else{
+
+        std::cout<<ec.message()<<std::endl;
 
     }
 
@@ -142,33 +141,15 @@ void tcp_connection::handle_write(const boost::system::error_code &ec ,size_t  s
 {
     if(!ec)
     {
-//
-//        switch (stag)
-//        {
-//            case 0:{
-//                printf("SOCKWAITREQUEST ");
-//                break;
-//            }
-//            case 1:{
-//                printf("SOCKCONNECTING ");
-//                break;
-//            }
-//            case 2:{
-//                printf("RELAY2SERVER ");
-//                break;
-//            }
-//            case 3:{
-//                printf("SOCKTRANS ");
-//                break;
-//            }
-//
-//        }
 
-        if(stag == RELAY2SERVER or READFROMSERVER) {
 
-            printf("send: ");
-            for (int i = 0; i < size; i++)
-                printf("%c", data_[i]);
+
+        if(stag == READFROMSERVER ) {
+
+//            printf("send: ");
+//            for (int i = 0; i < size; i++)
+//                printf("%c", data_[i]);
+
         }
         printf("\n");
         if(this->stag == SOCKWAITREQUEST){
@@ -179,23 +160,37 @@ void tcp_connection::handle_write(const boost::system::error_code &ec ,size_t  s
 
             this->stag = RELAY2SERVER;
 
+
+
         } else if (this->stag == RELAY2SERVER){
 
-            doRead(serversocket_);
             this->stag = READFROMSERVER;
-            return;
 
         } else if (this->stag == READFROMSERVER)
         {
+
+            for(int i=0;i<size;i++)
+                std::cout<<data_[i];
             this->stag = RELAY2SERVER;
         }
 
+
+        if(this->stag == READFROMSERVER)
+            doRead(serversocket_);
+        else
+            bzero(data_,max_length);
+            doRead(localsocket_);
+
+
     } else{
-        std::cout<<ec.message()<<std::endl;
+//        for(int i=0;i<size;i++)
+//            std::cout<<data_[i];
+        std::cout<<stag<<" "<<ec.message()<<std::endl;
     }
 
 //    backtrace();
-    doRead(localsocket_);
+
+
 }
 
 void tcp_connection::doRead(tcp::socket &socket_) {
@@ -211,6 +206,9 @@ void tcp_connection::doRead(tcp::socket &socket_) {
 
 void tcp_connection::doWrite(tcp::socket &socket_, int length) {
 
+
+//    if
+//        std::cout<<"size:"<<length<<std::endl;
 
     socket_.async_write_some(boost::asio::buffer(data_,length),
                              boost::bind(&tcp_connection::handle_write, shared_from_this(),
@@ -307,7 +305,14 @@ void tcp_connection::do_connect(tcp::resolver::results_type endpoints) {
                                            printf("connect\n");
 //                                           do_read_header();
                                        } else
+
+                                       {
                                            printf("can't connect\n");
+                                           data_[0]=2;
+                                           data_[1]=0;
+                                           data_[2]=0;
+                                           doWrite(localsocket_,3);
+                                       }
                                    });
     }
 

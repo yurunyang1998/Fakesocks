@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/yurunyang/Desktop/Fakesocks/tcp_connection.cpp
+iostream
+-
+execinfo.h
+-
+tcp_connection.h
+/home/yurunyang/Desktop/Fakesocks/tcp_connection.h
+
+/home/yurunyang/Desktop/Fakesocks/tcp_connection.h
+iostream
+/home/yurunyang/Desktop/Fakesocks/iostream
+boost/bind.hpp
+-
+boost/shared_ptr.hpp
+-
+boost/enable_shared_from_this.hpp
+-
+boost/asio.hpp
+-
+
